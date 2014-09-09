@@ -11,6 +11,8 @@ var stream = require('stream');
 
 var port = 8000;
 var localPath = __dirname;
+var socket_list = [];
+var socket_count=0;
 
 server = http.createServer(function(req, res)
 {
@@ -18,7 +20,7 @@ server = http.createServer(function(req, res)
 	so that those files would be loaded by the node server*/
 	filename = localPath + req.url;
 	sys.puts("Requesting for" + filename);
-	
+
 	fs.readFile(filename, function(err, contents)
 	{
 		if(!err)
@@ -32,9 +34,11 @@ server = http.createServer(function(req, res)
 server.listen(port);
 io.listen(server).on('connection', function(socket){
 
+	socket_count++;
+	socket_list.push(socket);
 	sys.puts("client connected\n");
-	socket.on('message', function(string)
+	socket.on('line', function(coordinates)
 	{
-		//sys.puts(string);
-	});
+		socket.broadcast.emit('line', coordinates);
+	})
 });
