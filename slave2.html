@@ -8,11 +8,11 @@
 		<script src="primitives.js"></script>
 		<script>
 			var socket = io.connect('http://127.0.0.1:8000');
-
+			socket.emit('setTotalCanvas', [canvas.width, canvas.height]);
 			canvas = document.getElementById("canvas");
 			context = canvas.getContext("2d");
 
-			context.translate(-200, 0);
+			socket.on('translate')
 			socket.on('line', function(coordinates)
 			{
 				line(coordinates[0], coordinates[1], coordinates[2], coordinates[3]);

@@ -12,7 +12,10 @@ var stream = require('stream');
 var port = 8000;
 var localPath = __dirname;
 var socket_list = [];
-var socket_count=0;
+var socket_count= -1;
+var height;
+var width;
+var socket_list=[];
 
 server = http.createServer(function(req, res)
 {
@@ -34,9 +37,43 @@ server = http.createServer(function(req, res)
 server.listen(port);
 io.listen(server).on('connection', function(socket){
 
-	socket_count++;
-	socket_list.push(socket);
 	sys.puts("client connected\n");
+	
+	socket.on('setTotalCanvas', function(dimenstions){
+		
+		sys.puts("setTotalCanvas received");
+		socket_list.push(socket);
+		socket_list[socket_list.indexOf(socket)].width = dimenstions[0];
+		socket_list[socket_list.indexOf(socket)].height = dimenstions[1];
+
+		width = 0;
+		height = 0;
+
+		origin_x=0;
+		origin_y=0;
+
+		for(i=0; i<socket_list.length; i++)
+		{
+			if(socket_list.length % 2 != 0)
+				break;
+			if(i <= socket_list.length/2 - 1)
+			{
+				width = width + socket_list[i].width;
+				origin_x = origin_x + socket_list[i].width;
+			}
+			
+			if(i > socket_list.length/2 - 1)
+			{
+				height = height + socket_list[i].height;
+				origin_y = origin_y + socket_list[i].height;
+			}
+		
+		}
+
+		sys.puts(width);
+		sys.puts(height);
+	});
+
 	socket.on('line', function(coordinates)
 	{
 		socket.broadcast.emit('line', coordinates);
