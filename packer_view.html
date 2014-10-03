@@ -1,0 +1,34 @@
+<html>
+	<head>
+		<script src="http://127.0.0.1:8000/socket.io/socket.io.js"></script>
+	</head>
+
+	<body>
+		<canvas id="canvas" width="200" height="200"></canvas>
+		<script>
+			var socket = io.connect('http://127.0.0.1:8000');
+			canvas = document.getElementById("canvas");
+			context = canvas.getContext("2d");
+
+			socket.on('setBound', function(width, height)
+			{
+				canvas.width = width;
+				canvas.height = height;
+			});
+
+			socket.on('drawRectangle', function(block)
+			{
+				context.fillStyle = "#00ff00";
+				context.fillRect(block.x, block.y, block.width, block.height);
+				context.stroke();
+			});
+
+			socket.on('drawRectangleFree', function(block)
+			{
+				context.strokeStyle = "black";
+				context.rect(block.x, block.y, block.width, block.height);
+				context.stroke();
+			});
+		</script>
+	</body>
+</html>
