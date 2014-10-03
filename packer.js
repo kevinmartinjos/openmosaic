@@ -1,11 +1,13 @@
 var sys = require("sys");
 var io = require("socket.io-client");
 
+var verbose = true;
+
 //Apparently this is how you connect a client nodejs script to the server
 var socket = io.connect('http://localhost:8000', {reconnect: true});
 
 //Dimensions of all the rectangles
-var rectangleList = [[200, 200]];
+var rectangleList = [[200, 200], [400, 400], [200, 200], [100, 100], [300, 300], [100, 100], [100, 200]];
 
 //For the time being, assume a fixed bounding rectangle
 var boundingWidth = 500;
@@ -33,21 +35,29 @@ function guillotine(bounding_block, canvas)
 	new_x = canvas.x + canvas.width;
 	new_y = canvas.y + canvas.height;
 
+	if(new_x > boundingWidth || new_y > boundingHeight)
+		return null;
+
 	//The horizontal partition
-	horizontal = new CanvasBlock(bounding_block.width - new_x, new_y, true);
+	horizontal = new CanvasBlock(bounding_block.width - canvas.width, canvas.height, true);
 	horizontal.setOrigin(new_x, canvas.y);
 	horizontal.free = true;
 
-	vertical = new CanvasBlock(bounding_block.width, bounding_block.height - new_y, true);
+	vertical = new CanvasBlock(bounding_block.width, bounding_block.height - canvas.height, true);
 	vertical.setOrigin(canvas.x, new_y);
 	horizontal.free = true;
 
+	if(verbose)
+	{
+		sys.puts("The partitions are : " + horizontal.width + "," + horizontal.height + " and " + vertical.width + "," + vertical.height);
+	}
 	return [horizontal, vertical];
 }
 
 //Add a CanvasBlock to the 'tree'
 function addCanvas(canvas, blockTree)
 {
+	sys.puts("adding canvas");
 	sys.puts(blockTree.length);
 	for(var i=0; i<blockTree.length; i++)
 	{
@@ -55,13 +65,17 @@ function addCanvas(canvas, blockTree)
 
 		if(current_block.free == true)
 		{
-			if(current_block.width > canvas.width && current_block.height > canvas.height)
+			
+			if(current_block.width >= canvas.width && current_block.height >= canvas.height)
 			{
 				//Free block can accommodate the canvas
 				canvas.setOrigin(current_block.x, current_block.y);
 				partitions = guillotine(current_block, canvas);
+				if(partitions == null)
+					break;
+		
 				blockTree[i] = canvas;
-				
+
 				//Inserting the newly created partitions
 				blockTree.splice(i+1, 0, partitions[0], partitions[1]);
 				sys.puts("Block succcesfully added : " + blockTree[i].width + ":" + blockTree[i].height);
@@ -80,7 +94,7 @@ function pack(rectangleList)
 	sys.puts(rectangleList);
 	for(var i=rectangleList.length-1; i>=0; i--)
 	{
-		if(i == 0)
+		if(i == rectangleList.length-1)
 		{
 			//Setting the bounding rectangle
 			freeBlock = new CanvasBlock(boundingWidth, boundingHeight, true)
