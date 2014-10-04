@@ -7,17 +7,35 @@ var verbose = true;
 var socket = io.connect('http://localhost:8000', {reconnect: true});
 
 //Dimensions of all the rectangles
-var rectangleList = [[200, 200], [400, 400], [200, 200], [100, 100], [300, 300], [100, 100], [100, 200]];
+var rectangleList = [[200, 400], [200, 200], [200, 200]];
 
-//For the time being, assume a fixed bounding rectangle
-var boundingWidth = 500;
-var boundingHeight = 500;
+//Setting boundingWidth as a very large number
+var boundingWidth = 1<<14;
+
+var boundingHeight = 1<<14;
 
 //List of all free and non-free blocks
 var blockTree = [];
 
+var max_width = 0;
 //Object that represents a block
 //boolean free - the block is free if set to true
+
+sortByOrdinate = function(rectangleList){
+
+	for(var i=0; i<rectangleList.length-1; i++)
+	{
+		for(var j=0; j<rectangleList.length-1; j++)
+		{	
+			if(rectangleList[j][1] > rectangleList[j+1][1])
+			{
+				temp = rectangleList[j];
+				rectangleList[j] = rectangleList[j+1];
+				rectangleList[j+1] = temp;
+			}
+		}
+	}
+}
 function CanvasBlock(width, height, free)
 {
 	this.width = width;
@@ -73,7 +91,9 @@ function addCanvas(canvas, blockTree)
 				partitions = guillotine(current_block, canvas);
 				if(partitions == null)
 					break;
-		
+				if(canvas.x + canvas.width > max_width)
+					max_width = canvas.x + canvas.width;
+
 				blockTree[i] = canvas;
 
 				//Inserting the newly created partitions
@@ -90,13 +110,14 @@ function pack(rectangleList)
 {
 
 	//sorts the list based on x values
-	rectangleList.sort();
+	sortByOrdinate(rectangleList);
 	sys.puts(rectangleList);
 	for(var i=rectangleList.length-1; i>=0; i--)
 	{
 		if(i == rectangleList.length-1)
 		{
 			//Setting the bounding rectangle
+			boundingHeight = rectangleList[i][1];
 			freeBlock = new CanvasBlock(boundingWidth, boundingHeight, true)
 			freeBlock.setOrigin(0, 0);
 			blockTree.push(freeBlock);
@@ -104,6 +125,20 @@ function pack(rectangleList)
 
 		canvas = new CanvasBlock(rectangleList[i][0], rectangleList[i][1], false);
 		addCanvas(canvas, blockTree);
+	}
+}
+
+function compactFreeBlocks(blockTree)
+{
+
+	for(var i=0; i<blockTree.length; i++)
+	{
+		block = blockTree[i];
+		if(block.free == true)
+		{
+			if(block.x + block.width == boundingWidth)
+				block.width = max_width - block.x;
+		}
 	}
 }
 
@@ -120,5 +155,6 @@ function render(blockTree)
 }
 
 pack(rectangleList);
+compactFreeBlocks(blockTree);
 render(blockTree);
 socket.disconnect();
