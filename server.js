@@ -2,16 +2,29 @@
 var http = require("http");
 var sys = require("sys");
 var fs = require("fs");
-
+var ds = require("./data_structures.js");
 var io = require('socket.io');
+var packer = require("./packer.js");
 
 var port = 8000;
 var localPath = __dirname;
 var socket_list = [];
-var socket_count= -1;
-var height;
-var width;
+var canvas_list = [];
 
+packer.setup(true);
+
+function viewLayout(blockTree, _socket)
+{
+	_socket.emit('packerSetBound', packer.PackerProperties.max_width, packer.PackerProperties.max_height);
+	for(var i=0; i<blockTree.length; i++)
+	{
+		sys.puts("Here");
+		if(blockTree[i].free == true)
+			socket_list.packer_view.emit('packerDrawRectangleFree', blockTree[i].x, blockTree[i].y, blockTree[i].width, blockTree[i].height);
+		else
+			socket_list.packer_view.emit('packerDrawRectangle', blockTree[i].x, blockTree[i].y, blockTree[i].width, blockTree[i].height);
+	}
+}
 
 server = http.createServer(function(req, res)
 {
@@ -31,54 +44,30 @@ server = http.createServer(function(req, res)
 });
 
 server.listen(port);
+
 io.listen(server).on('connection', function(socket){
 
 	sys.puts("client connected");
 	
-	socket.on('setTotalCanvas', function(dimenstions){
-		
-		sys.puts("setTotalCanvas received");
+	
+	socket.on('canvasHello', function(dimensions)
+	{
 		socket_list.push(socket);
-		socket_list[socket_list.indexOf(socket)].width = dimenstions[0];
-		socket_list[socket_list.indexOf(socket)].height = dimenstions[1];
+		canvas = new ds.CanvasBlock(dimensions[0], dimensions[1], false);
+		canvas.socket = socket;
+		canvas_list.push(canvas);
 
-		width = 0;
-		height = 0;
+		viewLayout(packer.pack(canvas_list), socket);
+	});
 
-		origin_x=0;
-		origin_y=0;
-
-		for(i=0; i<socket_list.length; i++)
-		{
-			if(socket_list.length % 2 != 0)
-				break;
-			if(i <= socket_list.length/2 - 1)
-			{
-				width = width + socket_list[i].width;
-				origin_x = origin_x + socket_list[i].width;
-			}
-			
-			if(i > socket_list.length/2 - 1)
-			{
-				height = height + socket_list[i].height;
-				origin_y = origin_y + socket_list[i].height;
-			}
-		
-		}
-
-		sys.puts(width);
-		sys.puts(height);
+	socket.on('packer_view', function(){
+		socket_list.packer_view = socket;
 	});
 
 	socket.on('line', function(coordinates)
 	{
 		socket.broadcast.emit('line', coordinates);
 	})
-
-	socket.on('setBound', function(width, height)
-	{
-		socket.broadcast.emit('setBound', width, height);
-	});
 
 	socket.on('drawRectangle', function(block)
 	{

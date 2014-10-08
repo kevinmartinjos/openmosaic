@@ -10,24 +10,26 @@
 			canvas = document.getElementById("canvas");
 			context = canvas.getContext("2d");
 
-			socket.on('setBound', function(width, height)
+			socket.emit('packer_view');
+
+			socket.on('packerSetBound', function(width, height)
 			{
 				canvas.width = width;
 				canvas.height = height;
 			});
 
-			socket.on('drawRectangle', function(block)
+			socket.on('packerDrawRectangle', function(x, y, width, height)
 			{
 				context.fillStyle = "#00ff00";
 				context.strokeStyle = "#ff0000";
-				context.fillRect(block.x, block.y, block.width, block.height);
+				context.fillRect(x, y, width, height);
 				context.stroke();
 			});
 
-			socket.on('drawRectangleFree', function(block)
+			socket.on('packerDrawRectangleFree', function(x, y, width, height)
 			{
 				context.strokeStyle = "black";
-				context.rect(block.x, block.y, block.width, block.height);
+				context.rect(x, y, width, height);
 				context.stroke();
 			});
 		</script>

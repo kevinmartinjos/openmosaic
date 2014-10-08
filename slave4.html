@@ -12,7 +12,7 @@
 			canvas = document.getElementById("canvas");
 			context = canvas.getContext("2d");
 
-			socket.emit('setTotalCanvas', [canvas.width, canvas.height]);
+			socket.emit('canvasHello', [canvas.width, canvas.height]);
 
 			context.translate(-200, -200);
 			socket.on('line', function(coordinates)

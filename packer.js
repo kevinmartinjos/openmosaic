@@ -1,13 +1,12 @@
 var sys = require("sys");
-var io = require("socket.io-client");
-var socket = io.connect("http://localhost:8000", {reconnect: true});
+//var io = require("socket.io-client");
+//var socket = io.connect("http://localhost:8000", {reconnect: true});
 var ds = require("./data_structures.js");
 
 function PackerProperties(){};
 
-function setup(rectangles, _verbose)
+function setup(_verbose)
 {
-	rectangleList = rectangles;
 	PackerProperties.max_width = 0;
 	PackerProperties.max_height = 0;
 
@@ -23,17 +22,17 @@ function setup(rectangles, _verbose)
 }
 
 //Sorts the list of rectangles by their y value
-sortByOrdinate = function(rectangleList){
+sortByOrdinate = function(canvas_list){
 
-	for(var i=0; i<rectangleList.length-1; i++)
+	for(var i=0; i<canvas_list.length-1; i++)
 	{
-		for(var j=0; j<rectangleList.length-1; j++)
+		for(var j=0; j<canvas_list.length-1; j++)
 		{	
-			if(rectangleList[j][1] > rectangleList[j+1][1])
+			if(canvas_list[j].height > canvas_list[j+1].height)
 			{
-				temp = rectangleList[j];
-				rectangleList[j] = rectangleList[j+1];
-				rectangleList[j+1] = temp;
+				temp = canvas_list[j];
+				canvas_list[j] = canvas_list[j+1];
+				canvas_list[j+1] = temp;
 			}
 		}
 	}
@@ -153,26 +152,26 @@ function _addCanvas(canvas, blockTree)
 	return 1;
 }
 
-function pack(rectangleList)
+function pack(canvas_list)
 {
+	//Stores info about all the blocks created by the packer
+	var blockTree = [];
 
 	//sorts the list based on x values
-	sortByOrdinate(rectangleList);
+	sortByOrdinate(canvas_list);
 
 	if(PackerProperties.verbose)
-		sys.puts(rectangleList);
+		sys.puts(canvas_list);
 	
-	for(var i=rectangleList.length-1; i>=0; i--)
+	for(var i=canvas_list.length-1; i>=0; i--)
 	{
-		if(i == rectangleList.length-1)
+		if(i == canvas_list.length-1)
 		{
 			freeBlock = new ds.CanvasBlock(PackerProperties.bounding_width, PackerProperties.bounding_height, true)
 			freeBlock.setOrigin(0, 0);
 			blockTree.push(freeBlock);
 		}
-
-		canvas = new ds.CanvasBlock(rectangleList[i][0], rectangleList[i][1], false);
-		var rc = _addCanvas(canvas, blockTree);
+		var rc = _addCanvas(canvas_list[i], blockTree);
 		if(!rc)
 		{
 			sys.puts("Warning : _addCanvas returns non-zero value");
@@ -180,9 +179,13 @@ function pack(rectangleList)
 		}
 	}
 
+	_compactFreeBlocks(blockTree);
 	return blockTree;
 }
 
+
+//The total canvas has got very large width and height initially
+//This function trims it down to the obtained max_width and max_height
 function _compactFreeBlocks(blockTree)
 {
 
@@ -201,8 +204,8 @@ function _compactFreeBlocks(blockTree)
 
 function render(blockTree)
 {
-	_compactFreeBlocks(blockTree);
-	socket.emit('setBound', PackerProperties.bounding_width, PackerProperties.bounding_height);
+	
+	socket.emit('setBound', PackerProperties.max_width, PackerProperties.max_height);
 	for(var i=0; i<blockTree.length; i++)
 	{
 		if(blockTree[i].free == true)
@@ -212,6 +215,7 @@ function render(blockTree)
 	}
 }
 
+module.exports.PackerProperties = PackerProperties;
 module.exports.verbose = PackerProperties.verbose;
 module.exports.bounding_width = PackerProperties.bounding_width;
 module.exports.bounding_height = PackerProperties.bounding_height;

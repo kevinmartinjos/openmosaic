@@ -12,11 +12,17 @@
 			canvas = document.getElementById("canvas");
 			context = canvas.getContext("2d");
 
-			socket.emit('setTotalCanvas', [canvas.width, canvas.height]);
+			socket.emit('canvasHello', [canvas.width, canvas.height]);
 			socket.on('line', function(coordinates)
 			{
 				line(coordinates[0], coordinates[1], coordinates[2], coordinates[3]);
 			});
+
+			socket.on('canvasReply', function()
+			{
+				console.log("Reply received");
+			});
+			
 		</script>
 	</body>
 </html>
