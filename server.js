@@ -10,15 +10,14 @@ var port = 8000;
 var localPath = __dirname;
 var socket_list = [];
 var canvas_list = [];
+var socket_count=0;
 
-packer.setup(true);
-
+//Draw the arrangement of the canvas blocks
 function viewLayout(blockTree, _socket)
 {
-	_socket.emit('packerSetBound', packer.PackerProperties.max_width, packer.PackerProperties.max_height);
+	socket_list.packer_view.emit('packerSetBound', packer.PackerProperties.max_width, packer.PackerProperties.max_height);
 	for(var i=0; i<blockTree.length; i++)
 	{
-		sys.puts("Here");
 		if(blockTree[i].free == true)
 			socket_list.packer_view.emit('packerDrawRectangleFree', blockTree[i].x, blockTree[i].y, blockTree[i].width, blockTree[i].height);
 		else
@@ -50,16 +49,22 @@ io.listen(server).on('connection', function(socket){
 	sys.puts("client connected");
 	
 	
+	//Only canvases that emit this signal are added to the socket_list
 	socket.on('canvasHello', function(dimensions)
 	{
+		socket_count++;
 		socket_list.push(socket);
 		canvas = new ds.CanvasBlock(dimensions[0], dimensions[1], false);
 		canvas.socket = socket;
+		canvas.id = socket_count;
+
 		canvas_list.push(canvas);
 
+		packer.setup(true);
 		viewLayout(packer.pack(canvas_list), socket);
 	});
 
+	//The packer_view is special, so it goes as an attribute
 	socket.on('packer_view', function(){
 		socket_list.packer_view = socket;
 	});
@@ -68,17 +73,6 @@ io.listen(server).on('connection', function(socket){
 	{
 		socket.broadcast.emit('line', coordinates);
 	})
-
-	socket.on('drawRectangle', function(block)
-	{
-		sys.puts(block.width + "x" + block.height + "at" + block.x + "," + block.y);
-		socket.broadcast.emit('drawRectangle', block)
-	});
-
-	socket.on('drawRectangleFree', function(block)
-	{
-		socket.broadcast.emit('drawRectangleFree', block)
-	});
 
 });
 

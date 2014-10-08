@@ -59,7 +59,7 @@ function _guillotine(bounding_block, canvas)
 
 	vertical = new ds.CanvasBlock(bounding_block.width, bounding_block.height - canvas.height, true);
 	vertical.setOrigin(canvas.x, new_y);
-	horizontal.free = true;
+	vertical.free = true;
 
 	if(PackerProperties.verbose)
 	{

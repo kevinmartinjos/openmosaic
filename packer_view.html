@@ -16,14 +16,20 @@
 			{
 				canvas.width = width;
 				canvas.height = height;
+
+				//clearRect is not working. Transparency is stacking.
+				context.clearRect(0, 0, canvas.width, canvas.height);
 			});
 
 			socket.on('packerDrawRectangle', function(x, y, width, height)
 			{
 				context.fillStyle = "#00ff00";
+				context.globalAlpha = 0.5;
 				context.strokeStyle = "#ff0000";
-				context.fillRect(x, y, width, height);
+				context.rect(x, y, width, height);
+				context.fill();
 				context.stroke();
+				context.globalAlpha = 1;
 			});
 
 			socket.on('packerDrawRectangleFree', function(x, y, width, height)
