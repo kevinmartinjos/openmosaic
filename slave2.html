@@ -1,22 +1,33 @@
 <html>
 	<head>
-		<script src="http://127.0.0.1:8000/socket.io/socket.io.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
 	</head>
 
 	<body>
-		<canvas id="canvas" width="200" height="200"></canvas>
+		<canvas id="canvas" width="400" height="400"></canvas>
 		<script src="primitives.js"></script>
 		<script>
-			var socket = io.connect('http://127.0.0.1:8000');
-			
+			var socket = io.connect();
+			var prev_x = 0;
+			var prev_y = 0;
+
 			canvas = document.getElementById("canvas");
 			context = canvas.getContext("2d");
 
 			socket.emit('canvasHello', [canvas.width, canvas.height]);
 
-			socket.on('line', function(coordinates)
+			socket.on('line', function(from, to)
 			{
-				line(coordinates[0], coordinates[1], coordinates[2], coordinates[3]);
+				//console.log("to : "+ to[0] + "," + to[1]);
+				line(from[0], from[1], to[0], to[1]);
+			});
+
+			socket.on('translate', function(x, y){
+				console.log("Translated to : " + x + "," + y);
+				context.translate(prev_x * -1, prev_y * -1);
+				context.translate(x, y);
+				prev_x = x;
+				prev_y = y;
 			});
 		</script>
 	</body>

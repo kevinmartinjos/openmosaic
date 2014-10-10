@@ -9,10 +9,15 @@ var packer = require("./packer.js");
 var port = 8000;
 var localPath = __dirname;
 var socket_list = [];
+
+var init_width;
+var init_height;
+
 var canvas_list = [];
+
 var socket_count=0;
 
-//Draw the arrangement of the canvas blocks
+//Draw the arrangement of the canvas blocks at packer_view.html
 function viewLayout(blockTree, _socket)
 {
 	socket_list.packer_view.emit('packerSetBound', packer.PackerProperties.max_width, packer.PackerProperties.max_height);
@@ -22,6 +27,18 @@ function viewLayout(blockTree, _socket)
 			socket_list.packer_view.emit('packerDrawRectangleFree', blockTree[i].x, blockTree[i].y, blockTree[i].width, blockTree[i].height, blockTree[i].id);
 		else
 			socket_list.packer_view.emit('packerDrawRectangle', blockTree[i].x, blockTree[i].y, blockTree[i].width, blockTree[i].height, blockTree[i].id);
+	}
+}
+
+function translateCanvases(blockTree)
+{
+	for(var i=0; i<blockTree.length; i++)
+	{
+		if(blockTree[i].free == false)
+		{
+			//sys.puts("translating " + i +" to " + blockTree[i].x * -1 + "," + blockTree[i].y * -1);
+			blockTree[i].socket.emit('translate', blockTree[i].x * -1, blockTree[i].y * -1);
+		}
 	}
 }
 
@@ -60,9 +77,11 @@ io.listen(server).on('connection', function(socket){
 
 		canvas_list.push(canvas);
 
-		packer.setup(true);
+		packer.setup(false);
 		blockTree = packer.pack(canvas_list);
+
 		viewLayout(blockTree, socket);
+		translateCanvases(blockTree);
 	});
 
 	//The packer_view is special, so it goes as an attribute
@@ -70,9 +89,25 @@ io.listen(server).on('connection', function(socket){
 		socket_list.packer_view = socket;
 	});
 
-	socket.on('line', function(coordinates)
+	socket.on('master', function(width, height)
 	{
-		socket.broadcast.emit('line', coordinates);
+		init_width = width;
+		init_height = height;
+	});
+
+	socket.on('line', function(from, to)
+	{
+		scale_x = packer.PackerProperties.max_width/init_width;
+		scale_y = packer.PackerProperties.max_height/init_height;
+
+		from[0] = from[0] * scale_x;
+		from[1] = from[1] * scale_y;
+
+		to[0] = to[0] * scale_x;
+		to[1] = to[1] * scale_y;
+
+		socket.broadcast.emit('line', from, to);
+
 	})
 
 });

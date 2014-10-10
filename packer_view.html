@@ -1,15 +1,18 @@
 <html>
 	<head>
-		<script src="http://127.0.0.1:8000/socket.io/socket.io.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
 	</head>
 
 	<body>
 		<canvas id="canvas" width="200" height="200"></canvas>
 		<script>
-			var socket = io.connect('http://127.0.0.1:8000');
+			var socket = io.connect();
 			canvas = document.getElementById("canvas");
 			context = canvas.getContext("2d");
 			context.font = "16px Arial";
+
+			//Just to let the server know about packer_view's socket.
+			//Trust me, this is needed.
 			socket.emit('packer_view');
 
 			socket.on('packerSetBound', function(width, height)

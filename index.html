@@ -4,6 +4,15 @@
 	</head>
 	<body>
 		<canvas id="canvas" width="400" height="400"></canvas>
+		<script> 
+			var socket = io.connect('http://127.0.0.1:8000');
+			canvas = document.getElementById("canvas");
+			context = canvas.getContext('2d');
+
+			socket.emit('master', canvas.width, canvas.height);
+			 
+		</script>
+
 		<script src="primitives.js"></script>
 		<script type="text/javascript">
 		</script>
