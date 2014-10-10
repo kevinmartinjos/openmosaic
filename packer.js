@@ -14,7 +14,6 @@ function setup(_verbose)
 	PackerProperties.bounding_height = 1 << 10;
 
 	PackerProperties.aspect_ratio = 1;
-	blockTree = [];
 	PackerProperties.verbose = _verbose;
 
 	return 1;

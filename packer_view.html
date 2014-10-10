@@ -9,30 +9,32 @@
 			var socket = io.connect('http://127.0.0.1:8000');
 			canvas = document.getElementById("canvas");
 			context = canvas.getContext("2d");
-
+			context.font = "16px Arial";
 			socket.emit('packer_view');
 
 			socket.on('packerSetBound', function(width, height)
 			{
 				canvas.width = width;
 				canvas.height = height;
-
-				//clearRect is not working. Transparency is stacking.
-				context.clearRect(0, 0, canvas.width, canvas.height);
 			});
 
-			socket.on('packerDrawRectangle', function(x, y, width, height)
+			socket.on('packerDrawRectangle', function(x, y, width, height, id)
 			{
+				console.log("Drawing at "+x+","+y + "width : " + width + " height " + height);
+				context.beginPath();
 				context.fillStyle = "#00ff00";
 				context.globalAlpha = 0.5;
-				context.strokeStyle = "#ff0000";
+				context.strokeStyle = "black";
 				context.rect(x, y, width, height);
 				context.fill();
+				context.fillStyle = "blue";
+				context.fillText(id, x + width/2, y + height/2);
 				context.stroke();
 				context.globalAlpha = 1;
+			
 			});
 
-			socket.on('packerDrawRectangleFree', function(x, y, width, height)
+			socket.on('packerDrawRectangleFree', function(x, y, width, height, id)
 			{
 				context.strokeStyle = "black";
 				context.rect(x, y, width, height);

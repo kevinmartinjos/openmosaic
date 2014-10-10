@@ -19,9 +19,9 @@ function viewLayout(blockTree, _socket)
 	for(var i=0; i<blockTree.length; i++)
 	{
 		if(blockTree[i].free == true)
-			socket_list.packer_view.emit('packerDrawRectangleFree', blockTree[i].x, blockTree[i].y, blockTree[i].width, blockTree[i].height);
+			socket_list.packer_view.emit('packerDrawRectangleFree', blockTree[i].x, blockTree[i].y, blockTree[i].width, blockTree[i].height, blockTree[i].id);
 		else
-			socket_list.packer_view.emit('packerDrawRectangle', blockTree[i].x, blockTree[i].y, blockTree[i].width, blockTree[i].height);
+			socket_list.packer_view.emit('packerDrawRectangle', blockTree[i].x, blockTree[i].y, blockTree[i].width, blockTree[i].height, blockTree[i].id);
 	}
 }
 
@@ -61,7 +61,8 @@ io.listen(server).on('connection', function(socket){
 		canvas_list.push(canvas);
 
 		packer.setup(true);
-		viewLayout(packer.pack(canvas_list), socket);
+		blockTree = packer.pack(canvas_list);
+		viewLayout(blockTree, socket);
 	});
 
 	//The packer_view is special, so it goes as an attribute
