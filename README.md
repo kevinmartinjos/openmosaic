@@ -19,4 +19,6 @@ Openmosaic uses javascript and nodejs to split up a sketch (html5 canvas thing) 
 
 4) Move mouse over index.html and you will see lines appear on the slaves as well
 
-5) Just want to know if this works? Check the screenshots directory
+5) open mosaic calculates the canvas positions of the slaves dynamically. There's a very basic tool to help you decide the order in which the slaves should be put together so that you can see the whole picture. Go to http://localhost:8000/packer_view.html. The page will be blank first. Open a slave in another tab and packer_view.html should show you the arrangement in the form of rectangles
+
+6) Just want to know if this works? Check the screenshots directory
