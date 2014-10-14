@@ -42,6 +42,15 @@ function translateCanvases(blockTree)
 	}
 }
 
+function scale(point)
+{
+	scale_x = packer.PackerProperties.max_width/init_width;
+	scale_y = packer.PackerProperties.max_height/init_height;
+
+	point[0] = point[0] * scale_x;
+	point[1] = point[1] * scale_y;
+}
+
 server = http.createServer(function(req, res)
 {
 	//One file might load many other files. Creating the filename dynamicall
@@ -80,7 +89,11 @@ io.listen(server).on('connection', function(socket){
 		packer.setup(false);
 		blockTree = packer.pack(canvas_list);
 
-		viewLayout(blockTree, socket);
+		//without this check, packer_view.html should be open
+		//every time we run the program or it will crash
+		if(socket_list.packer_view != null)
+			viewLayout(blockTree, socket);
+		
 		translateCanvases(blockTree);
 	});
 
@@ -97,14 +110,8 @@ io.listen(server).on('connection', function(socket){
 
 	socket.on('line', function(from, to)
 	{
-		scale_x = packer.PackerProperties.max_width/init_width;
-		scale_y = packer.PackerProperties.max_height/init_height;
-
-		from[0] = from[0] * scale_x;
-		from[1] = from[1] * scale_y;
-
-		to[0] = to[0] * scale_x;
-		to[1] = to[1] * scale_y;
+		scale(from);
+		scale(to);
 
 		socket.broadcast.emit('line', from, to);
 
