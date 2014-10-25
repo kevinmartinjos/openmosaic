@@ -10,8 +10,8 @@ function setup(_verbose)
 	PackerProperties.max_width = 0;
 	PackerProperties.max_height = 0;
 
-	PackerProperties.bounding_width = 1 << 10;
-	PackerProperties.bounding_height = 1 << 10;
+	PackerProperties.bounding_width = 1 << 12;
+	PackerProperties.bounding_height = 1 << 12;
 
 	PackerProperties.aspect_ratio = 1;
 	PackerProperties.verbose = _verbose;

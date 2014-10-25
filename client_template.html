@@ -15,10 +15,10 @@
 			context = canvas.getContext("2d");
 
 			socket.emit('canvasHello', [canvas.width, canvas.height]);
-			
+			console.log(canvas.width + "," + canvas.height);
 			socket.on('line', function(from, to)
 			{
-				//console.log("to : "+ to[0] + "," + to[1]);
+				console.log("to : "+ to[0] + "," + to[1]);
 				line(from[0], from[1], to[0], to[1]);
 			});
 

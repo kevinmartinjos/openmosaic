@@ -17,6 +17,7 @@
 
 			socket.on('packerSetBound', function(width, height)
 			{
+				console.log("setting bounds to : " + width + "," + height);
 				canvas.width = width;
 				canvas.height = height;
 			});
@@ -39,6 +40,7 @@
 
 			socket.on('packerDrawRectangleFree', function(x, y, width, height, id)
 			{
+				console.log("DrawingFree rect at "+x+","+y + "width : " + width + " height " + height);
 				context.strokeStyle = "black";
 				context.rect(x, y, width, height);
 				context.stroke();

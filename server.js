@@ -6,6 +6,8 @@ var ds = require("./data_structures.js");
 var io = require('socket.io');
 var packer = require("./packer.js");
 
+var client_template = "./client_template.html"
+
 var port = 8000;
 var localPath = __dirname;
 var socket_list = [];
@@ -53,19 +55,35 @@ function scale(point)
 
 server = http.createServer(function(req, res)
 {
-	//One file might load many other files. Creating the filename dynamicall
+	//One file might load many other files. Creating the filename dynamically
 	//so that those files would be loaded by the node server
 	filename = localPath + req.url;
 	sys.puts("Requesting for" + filename);
 
-	fs.readFile(filename, function(err, contents)
+	//If url ends with /slave<no>, respond by sending the html file
+	if(/\/slave\d/.test(req.url))
 	{
-		if(!err)
+		fs.readFile(client_template, function(err, contents)
 		{
-			res.statusCode = 200;
-			res.end(contents);
-		}
-	});
+			if(!err)
+			{
+				res.statusCode = 200;
+				res.end(contents);
+			}
+		});
+	}
+	else
+	{
+		fs.readFile(filename, function(err, contents)
+		{
+			if(!err)
+			{
+				res.statusCode = 200;
+				res.end(contents);
+			}
+		});
+	}
+
 });
 
 server.listen(port);
