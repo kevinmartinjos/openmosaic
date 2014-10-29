@@ -12,6 +12,8 @@ var port = 8000;
 var localPath = __dirname;
 var socket_list = [];
 
+var verbose = false;
+
 var init_width;
 var init_height;
 
@@ -58,7 +60,9 @@ server = http.createServer(function(req, res)
 	//One file might load many other files. Creating the filename dynamically
 	//so that those files would be loaded by the node server
 	filename = localPath + req.url;
-	sys.puts("Requesting for" + filename);
+
+	if(verbose)
+		sys.puts("Requesting for" + filename);
 
 	//If url ends with /slave<no>, respond by sending the html file
 	if(/\/slave\d/.test(req.url))
@@ -90,7 +94,8 @@ server.listen(port);
 
 io.listen(server).on('connection', function(socket){
 
-	sys.puts("client connected");
+	if(verbose)
+		sys.puts("client connected");
 	
 	
 	//Only canvases that emit this signal are added to the socket_list
@@ -104,7 +109,7 @@ io.listen(server).on('connection', function(socket){
 
 		canvas_list.push(canvas);
 
-		packer.setup(false);
+		packer.setup(true);
 		blockTree = packer.pack(canvas_list);
 
 		//without this check, packer_view.html should be open

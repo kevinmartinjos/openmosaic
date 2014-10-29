@@ -44,6 +44,8 @@ sortByOrdinate = function(canvas_list){
 function _guillotine(bounding_block, canvas)
 {
 	//Always go for horizontal partitioning
+	if(PackerProperties.verbose == true)
+		sys.puts("_guillotine");
 
 	new_x = canvas.x + canvas.width;
 	new_y = canvas.y + canvas.height;
@@ -68,6 +70,50 @@ function _guillotine(bounding_block, canvas)
 }
 
 
+//Find the best place to insert the canvas
+//and return that index
+function _findInsertLocation(canvas, blockTree)
+{
+	var location = null;
+
+	//An uncommon value
+	var best_ratio = 100;
+
+	for(var i=0; i<blockTree.length; i++)
+	{
+		if(blockTree[i].free == true)
+		{
+			if(blockTree[i].width >= canvas.width && blockTree[i].height >= canvas.height)
+			{
+				predicted_width = PackerProperties.max_width;
+				predicted_height =PackerProperties.max_height;
+
+				if(blockTree[i].x + canvas.width > PackerProperties.max_width)
+				{
+					predicted_width = blockTree[i].x + canvas.width;
+				}
+
+				if(blockTree[i].y + canvas.height > PackerProperties.max_height)
+				{
+					predicted_height = blockTree[i].y + canvas.height;
+				}
+
+				var p_ratio = predicted_width/predicted_height;
+
+				//After each "mock insertion", we check if the predicted
+				//aspect ratio is any better
+				if(Math.abs(PackerProperties.aspect_ratio - p_ratio) < Math.abs(PackerProperties.aspect_ratio - best_ratio))
+				{
+					best_ratio = p_ratio;
+					location = i;
+				}
+			}
+		}
+	}
+
+	return location;
+}
+
 //Add a ds.CanvasBlock to the 'tree'
 function _addCanvas(canvas, blockTree)
 {
@@ -82,71 +128,43 @@ function _addCanvas(canvas, blockTree)
 	if(PackerProperties.verbose)
 	{
 		sys.puts("adding canvas");
-		sys.puts(blockTree.length);
+		sys.puts("BlockTree length : " + blockTree.length);
 	}
 
-	for(var i=0; i<blockTree.length; i++)
+	var i = _findInsertLocation(canvas, blockTree);
+	if(PackerProperties.verbose)
 	{
-		current_block = blockTree[i];
-
-		if(current_block.free == true)
-		{
-			
-			if(current_block.width >= canvas.width && current_block.height >= canvas.height)
-			{
-				//Free block can accommodate the canvas
-
-				predicted_width = PackerProperties.max_width;
-				predicted_height = PackerProperties.max_height;
-
-				//Checking if additon of the new canvas increases the maximum width or height
-				if(current_block.x + canvas.width > PackerProperties.max_width)
-				{
-					predicted_width = current_block.x + canvas.width;
-				}
-
-				if(current_block.y + canvas.height > PackerProperties.max_height)
-				{
-					predicted_height = current_block.y + canvas.height;
-				}
-
-				//To keep the aspect ratio in check. Useless as of now
-				if(predicted_width/predicted_height > PackerProperties.aspect_ratio)
-					continue;
-
-
-				//Adding the canvas to the blockTree
-				blockTree[i] = canvas;
-				canvas.setOrigin(current_block.x, current_block.y);
-
-				partitions = _guillotine(current_block, canvas);
-				
-				if(partitions == null)
-					break;
-				
-				if(canvas.x + canvas.width > PackerProperties.max_width)
-					PackerProperties.max_width = canvas.x + canvas.width;
-				if(canvas.y + canvas.height > PackerProperties.max_height)
-					PackerProperties.max_height = canvas.y + canvas.height;
-
-
-				//Inserting the newly created partitions
-				if(partitions[0].width * partitions[0].height > 0)
-					blockTree.splice(i+1, 0, partitions[0]);
-
-				if(partitions[1].width * partitions[1].height > 0)
-					blockTree.splice(i+2, 0, partitions[1]);
-
-				
-				if(PackerProperties.verbose)
-					sys.puts("Block succcesfully added : " + blockTree[i].width + ":" + blockTree[i].height);
-				
-				//break the loop if a canvas is added
-				break;
-			}
-
-		}
+		if(i == null)
+			sys.puts("cannot insert : could not find insert location");
 	}
+
+	canvas.setOrigin(blockTree[i].x, blockTree[i].y);
+
+	partitions = _guillotine(blockTree[i], canvas);
+
+	blockTree[i] = canvas;
+
+	sys.puts("canvas origin : " + canvas.x + "," + canvas.y);
+	if(partitions == null)
+	{
+		if(PackerProperties.verbose)
+			sys.puts("could not create partitions");
+	}
+
+	if(canvas.x + canvas.width > PackerProperties.max_width)
+		PackerProperties.max_width = canvas.x + canvas.width;
+	if(canvas.y + canvas.height > PackerProperties.max_height)
+		PackerProperties.max_height = canvas.y + canvas.height;
+
+	//some times partitioning can return partitions
+	//with zero area. We don't include them
+	if(partitions[0].width * partitions[0].height > 0)
+		blockTree.splice(i+1, 0, partitions[0]);
+	if(partitions[1].width * partitions[1].height > 0)
+		blockTree.splice(i+2, 0, partitions[1]);
+
+	if(PackerProperties.verbose)
+		sys.puts("Block succcesfully added  at + " + blockTree[i].x + "," + blockTree[i]. y + " : " + blockTree[i].width + ":" + blockTree[i].height);
 
 	return 1;
 }
@@ -160,7 +178,7 @@ function pack(canvas_list)
 	sortByOrdinate(canvas_list);
 
 	if(PackerProperties.verbose)
-		sys.puts(canvas_list);
+		sys.puts("canvas_list: " + canvas_list);
 	
 	for(var i=canvas_list.length-1; i>=0; i--)
 	{
@@ -201,6 +219,8 @@ function _compactFreeBlocks(blockTree)
 	}
 }
 
+
+//Clean this code (remove this function)
 function render(blockTree)
 {
 	

@@ -13,6 +13,8 @@
 
 			canvas = document.getElementById("canvas");
 			context = canvas.getContext("2d");
+			canvas.width = window.innerWidth;
+			canvas.height = window.innerHeight;
 
 			socket.emit('canvasHello', [canvas.width, canvas.height]);
 			console.log(canvas.width + "," + canvas.height);
