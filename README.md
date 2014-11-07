@@ -13,12 +13,12 @@ Openmosaic uses javascript and nodejs to split up a sketch (html5 canvas thing) 
 
 1) 'node server.js' runs the server.
 
-2) Navigate to http://localhost:8000/index.html to see the main sketch. Underlying code is in app.js
+2) Open browser, go to "http://localhost:8000/packer_view.html". This shows which screens go where. Its use will become clear later. It is important that you open this page first.
 
-3) Go to http://localhost:8000/slave1.html, slave2.html, slave3.html and slave4.html. Make sure each of the slaves are opened in a new window and they are resized to around 400x400 (or less). The slaves, when put together, forms our mosaic.
+3) In another tab, open "http://localhost:8000/slave1". This is your first client.
 
-4) Move mouse over index.html and you will see lines appear on the slaves as well
+4) another tab-> "localhost:8000/slave2" to add another client. You can add as many clients as you want, as long as the url ends with slave<no>
 
-5) open mosaic calculates the canvas positions of the slaves dynamically. There's a very basic tool to help you decide the order in which the slaves should be put together so that you can see the whole picture. Go to http://localhost:8000/packer_view.html. The page will be blank first. Open a slave in another tab and packer_view.html should show you the arrangement in the form of rectangles
+5) In another tab, go to "locahost:8000/index.html". Move mouse over this page and you should see some lines. Look in the slave tabs and you should see the enlarged lines. If you want to see this properly, open the slave tabs in seperate phone screens. The correct arrangement needed is shown in packer_view.html tab.
 
-6) Just want to know if this works? Check the screenshots directory
+6) Keep drawing lines. The display is updated in real time
