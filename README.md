@@ -1,4 +1,4 @@
-####Openmosaic Readme(for the lack of a better name)
+###Openmosaic Readme
 
 Openmosaic uses javascript and nodejs to split up a sketch (html5 canvas thing) into multiple canvases. Imagine playing the classic game of snakes accross multiple screens.
 
