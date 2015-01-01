@@ -1,3 +1,22 @@
+/*
+copyright © Kevin Martin Jose
+
+This file is part of openmosaic.
+
+openmosaic is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+openmosaic is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 //Main server
 var http = require("http");
 var sys = require("sys");
@@ -46,13 +65,32 @@ function translateCanvases(blockTree)
 	}
 }
 
-function scale(point)
+/*Scale a single point to collective screen dimensions*/
+function scalePoint(point)
 {
 	scale_x = packer.PackerProperties.max_width/init_width;
 	scale_y = packer.PackerProperties.max_height/init_height;
 
 	point[0] = point[0] * scale_x;
 	point[1] = point[1] * scale_y;
+}
+
+/*Go through each and every key:value pairs
+in the json object and if it represents coordinate
+values, scale it according to the size of the client
+screens*/ 
+function scale(arg)
+{
+	for( var key in arg){
+		if(arg.hasOwnProperty(key)){
+
+			//if the key represents x, y coordinates
+			if(arg[key].length == 2)
+			{
+				scalePoint(arg[key]);
+			}
+		}
+	}
 }
 
 server = http.createServer(function(req, res)
@@ -64,7 +102,7 @@ server = http.createServer(function(req, res)
 	if(verbose)
 		sys.puts("Requesting for" + filename);
 
-	//If url ends with /slave<no>, respond by sending the html file
+	//If url ends with "/slave<no>", respond by sending the client template html file
 	if(/\/slave\d/.test(req.url))
 	{
 		fs.readFile(client_template, function(err, contents)
@@ -131,14 +169,26 @@ io.listen(server).on('connection', function(socket){
 		init_height = height;
 	});
 
-	socket.on('line', function(from, to)
-	{
-		scale(from);
-		scale(to);
+	//callback accepts the name of the function,
+	//the number of arguments and the arguments
+	//as a json string
+	//Handles all the socket.emits in app.js
+	socket.on('action', function(functionName, args){
+		var jsonObject = JSON.parse(args);
+		
+		scale(jsonObject);
 
-		socket.broadcast.emit('line', from, to);
-
-	})
+		//making json object string
+		var toSendArgs = "";
+		for(var key in jsonObject){
+			if(jsonObject.hasOwnProperty(key))
+				toSendArgs = toSendArgs + jsonObject[key] + ",";
+		}
+		if(toSendArgs.length != 0)
+			toSendArgs = toSendArgs.substring(0, toSendArgs.length-1);
+				
+		socket.broadcast.emit('action', functionName, toSendArgs);
+	});
 
 });
 

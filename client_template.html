@@ -1,3 +1,21 @@
+<!--
+copyright © Kevin Martin Jose
+
+This file is part of openmosaic.
+
+openmosaic is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+openmosaic is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
+-->
 <html>
 	<head>
 		<script src="/socket.io/socket.io.js"></script>
@@ -18,10 +36,11 @@
 
 			socket.emit('canvasHello', [canvas.width, canvas.height]);
 			console.log(canvas.width + "," + canvas.height);
-			socket.on('line', function(from, to)
-			{
-				console.log("to : "+ to[0] + "," + to[1]);
-				line(from[0], from[1], to[0], to[1]);
+
+			//functionName is a string
+			socket.on('action', function(functionName, args){
+				var evalString = functionName + "(" + args + ")";
+				var rc = eval(evalString);
 			});
 
 			socket.on('translate', function(x, y){
