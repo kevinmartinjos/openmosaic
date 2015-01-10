@@ -25,77 +25,321 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 /*All code that goes to rendering the original canvas 
 SHOULD be in app.js*/
 
+/*code that displays the fps bar*/
+/**
+* @author mrdoob / http://mrdoob.com/
+*/
+var Stats = function () {
+var startTime = Date.now(), prevTime = startTime;
+var ms = 0, msMin = Infinity, msMax = 0;
+var fps = 0, fpsMin = Infinity, fpsMax = 0;
+var frames = 0, mode = 0;
+var container = document.createElement( 'div' );
+container.id = 'stats';
+container.addEventListener( 'mousedown', function ( event ) { event.preventDefault(); setMode( ++ mode % 2 ) }, false );
+container.style.cssText = 'width:80px;opacity:0.9;cursor:pointer';
+var fpsDiv = document.createElement( 'div' );
+fpsDiv.id = 'fps';
+fpsDiv.style.cssText = 'padding:0 0 3px 3px;text-align:left;background-color:#002';
+container.appendChild( fpsDiv );
+var fpsText = document.createElement( 'div' );
+fpsText.id = 'fpsText';
+fpsText.style.cssText = 'color:#0ff;font-family:Helvetica,Arial,sans-serif;font-size:9px;font-weight:bold;line-height:15px';
+fpsText.innerHTML = 'FPS';
+fpsDiv.appendChild( fpsText );
+var fpsGraph = document.createElement( 'div' );
+fpsGraph.id = 'fpsGraph';
+fpsGraph.style.cssText = 'position:relative;width:74px;height:30px;background-color:#0ff';
+fpsDiv.appendChild( fpsGraph );
+while ( fpsGraph.children.length < 74 ) {
+var bar = document.createElement( 'span' );
+bar.style.cssText = 'width:1px;height:30px;float:left;background-color:#113';
+fpsGraph.appendChild( bar );
+}
+var msDiv = document.createElement( 'div' );
+msDiv.id = 'ms';
+msDiv.style.cssText = 'padding:0 0 3px 3px;text-align:left;background-color:#020;display:none';
+container.appendChild( msDiv );
+var msText = document.createElement( 'div' );
+msText.id = 'msText';
+msText.style.cssText = 'color:#0f0;font-family:Helvetica,Arial,sans-serif;font-size:9px;font-weight:bold;line-height:15px';
+msText.innerHTML = 'MS';
+msDiv.appendChild( msText );
+var msGraph = document.createElement( 'div' );
+msGraph.id = 'msGraph';
+msGraph.style.cssText = 'position:relative;width:74px;height:30px;background-color:#0f0';
+msDiv.appendChild( msGraph );
+while ( msGraph.children.length < 74 ) {
+var bar = document.createElement( 'span' );
+bar.style.cssText = 'width:1px;height:30px;float:left;background-color:#131';
+msGraph.appendChild( bar );
+}
+var setMode = function ( value ) {
+mode = value;
+switch ( mode ) {
+case 0:
+fpsDiv.style.display = 'block';
+msDiv.style.display = 'none';
+break;
+case 1:
+fpsDiv.style.display = 'none';
+msDiv.style.display = 'block';
+break;
+}
+};
+var updateGraph = function ( dom, value ) {
+var child = dom.appendChild( dom.firstChild );
+child.style.height = value + 'px';
+};
+return {
+REVISION: 12,
+domElement: container,
+setMode: setMode,
+begin: function () {
+startTime = Date.now();
+},
+end: function () {
+var time = Date.now();
+ms = time - startTime;
+msMin = Math.min( msMin, ms );
+msMax = Math.max( msMax, ms );
+msText.textContent = ms + ' MS (' + msMin + '-' + msMax + ')';
+updateGraph( msGraph, Math.min( 30, 30 - ( ms / 200 ) * 30 ) );
+frames ++;
+if ( time > prevTime + 1000 ) {
+fps = Math.round( ( frames * 1000 ) / ( time - prevTime ) );
+fpsMin = Math.min( fpsMin, fps );
+fpsMax = Math.max( fpsMax, fps );
+fpsText.textContent = fps + ' FPS (' + fpsMin + '-' + fpsMax + ')';
+updateGraph( fpsGraph, Math.min( 30, 30 - ( fps / 100 ) * 30 ) );
+prevTime = time;
+frames = 0;
+}
+return time;
+},
+update: function () {
+startTime = this.end();
+}
+}
+};
+
+var stats = new Stats();
+stats.setMode(0); // 0: fps, 1: ms
+
+// align top-left
+stats.domElement.style.position = 'absolute';
+stats.domElement.style.left = '0px';
+stats.domElement.style.top = '0px';
+
+document.body.appendChild( stats.domElement );
+
 canvas = document.getElementById("canvas");
 context = canvas.getContext("2d");
 var socket = io.connect();
 
 
 
-var x = 0;
-var y = 200;
+// requestAnimFrame shim
+window.requestAnimFrame = (function()
+{
+   return  window.requestAnimationFrame       || 
+           window.webkitRequestAnimationFrame || 
+           window.mozRequestAnimationFrame    || 
+           window.oRequestAnimationFrame      || 
+           window.msRequestAnimationFrame     || 
+           function(callback)
+           {
+               window.setTimeout(callback);
+           };
+})();
 
-//controls the direction
-var xmod = 1;
-var ymod = 0;
+// remove frame margin and scrollbars when maxing out size of canvas
+document.body.style.margin = "0px";
+document.body.style.overflow = "hidden";
 
-function draw(){
-	/*We draw a line*/
-	requestAnimationFrame(draw);
+// get dimensions of window and resize the canvas to fit
+var width = window.innerWidth,
+    height = window.innerHeight,
+    mousex = width/2, mousey = height/2;
+canvas.width = width;
+canvas.height = height;
 
+// get 2d graphics context and set global alpha
+context.globalAlpha=0.25;
 
-	//After every drawing action, we send the command to via sockets
-	//to server, which sends it to all clients
-	//The value inside brackets is a JSON string
-	clearScreen();
-	socket.emit('action', 'clearScreen', "{}");
-	context.beginPath();
-	socket.emit('action', 'context.beginPath',"{}");
-	context.moveTo(x, y);
-	//The JSON keys can be anything. Its okay if you had used "blah" instead of "a"
-	socket.emit('action', 'context.moveTo', "{\"a\": ["+x+","+y+"]}");
-	context.lineTo(x+10, y);
-	socket.emit('action', 'context.lineTo', "{\"a\": ["+(x+10)+","+y+"]}");
-	context.stroke();
-	socket.emit('action', 'context.stroke',"{}");
-	
-	/*Move the line*/
-	x= x + xmod;
-	y = y + ymod;
+// setup aliases
+var Rnd = Math.random,
+    Sin = Math.sin,
+    Floor = Math.floor;
+
+// constants and storage for objects that represent star positions
+var warpZ = 12,
+    units = 100,
+    stars = [],
+    cycle = 0,
+    Z = 0.025 + (1/25 * 2);
+
+// mouse events
+function addCanvasEventListener(name, fn)
+{
+   canvas.addEventListener(name, fn, false);
+}
+addCanvasEventListener("mousemove", function(e) {
+   mousex = e.clientX;
+   mousey = e.clientY;
+});
+
+function wheel (e) {
+   var delta = 0;
+   if (e.detail)
+   {
+      delta = -e.detail / 3;
+   }
+   else
+   {
+      delta = e.wheelDelta / 120;
+   }
+   var doff = (delta/25);
+   if (delta > 0 && Z+doff <= 0.5 || delta < 0 && Z+doff >= 0.01)
+   {
+      Z += (delta/25);
+      //console.log(delta +" " +Z);
+   }
+}
+addCanvasEventListener("DOMMouseScroll", wheel);
+addCanvasEventListener("mousewheel", wheel);
+
+// function to reset a star object
+function resetstar(a)
+{
+   a.x = (Rnd() * width - (width * 0.5)) * warpZ;
+   a.y = (Rnd() * height - (height * 0.5)) * warpZ;
+   a.z = warpZ;
+   a.px = 0;
+   a.py = 0;
 }
 
-/*Html canvas cannot listen to keyboard events unless 
-it is focused. This event listener focuses the canvas
-when we move mouse over it.
-*/
-canvas.addEventListener('mouseover', function(e){
-	canvas.focus();
-	return false;
-}, false);
+// initial star setup
+for (var i=0, n; i<units; i++)
+{
+   n = {};
+   resetstar(n);
+   stars.push(n);
+}
 
-/*Listen to keyboard events and change direction
-of motion (set variables) accordingly. Remember, the 
-canvas should be focused by moving the mouse over
-it for the key presses to work
-*/
-canvas.addEventListener('keypress', function(e){
-	console.log("hurray");
-	if(e.keyCode == 37){
-		xmod = -1;
-		ymod = 0;
-	}
-	else if(e.keyCode == 39){
-		xmod = 1;
-		ymod = 0;
-	}
-	else if(e.keyCode == 38){
-		xmod = 0;
-		ymod = -1;
-	}
-	else if(e.keyCode == 40){
-		xmod = 0;
-		ymod = 1;
-	}}, false);
+// star rendering anim function
+var rf = function()
+{
+   // clear background
+   setTimeout(function(){
+        stats.begin();
+        requestAnimFrame(rf);
+        var commands = [];
 
-draw();
+       context.fillStyle = "#000";
+       context.fillRect(0, 0, width, height);
+
+       //The "type" parameter is there so that in
+       //future we can easily distinguish between
+       //setting variables and calling
+       //drawing functions
+       commands.push({
+       	'func': 'context.fillRect',
+       	'type': "pos",
+       	'args': {
+       		"a": [0,0],
+       		"b": [width, height]
+       	}
+       });
+
+       //socket.emit('action', 'clearScreen', "{}");
+
+       // mouse position to head towards
+       var cx = (mousex - width / 2) + (width / 2),
+           cy = (mousey - height / 2) + (height / 2);
+       
+       // update all stars
+       var sat = Floor(Z * 500);       // Z range 0.01 -> 0.5
+       if (sat > 100) sat = 100;
+       
+       for (var i=0; i<units; i++)
+       {
+          var n = stars[i],            // the star
+              xx = n.x / n.z,          // star position
+              yy = n.y / n.z,
+              e = (1.0 / n.z + 1) * 2;   // size i.e. z
+          
+          if (n.px !== 0)
+          {
+             // hsl colour from a sine wave
+             context.strokeStyle = "hsl(" + ((cycle * i) % 360) + "," + sat + "%,80%)";
+             
+	       /*This is how you set a variable on the client side
+		   *Be careful with the arguments. See setVariable()
+		   *in primitives.js. Not working as of now. Will fix it.
+	       */
+
+             
+            /* commands.push({
+		       	'func': 'setVariable',
+		       	'type': "var",
+		       	'args': {
+		       		"a": "'context.strokeStyle'",
+		       		"b": "\""+context.strokeStyle+"\""
+		       	}
+       		});
+
+             context.lineWidth = e;
+
+			commands.push({
+		       	'func': 'setVariable',
+		       	'type': "var",
+		       	'args': {
+		       		"a": "'context.lineWidth'",
+		       		"b": "\""+context.lineWidth+"\""
+		       	}
+       		});*/
+
+             line(xx + cx, yy + cy, n.px + cx, n.py + cy);
+             var x1 = xx + cx;
+             var y1 = yy + cy;
+             var x2 = n.px + cx;
+             var y2 = n.py + cy;
+
+             commands.push({
+              'func': 'line',
+               'type': "pos",
+               'args': {
+                  "a": [x1, y1],
+                  "b": [x2, y2] 
+               }
+             });
+          }
+          
+          // update star position values with new settings
+          n.px = xx;
+          n.py = yy;
+          n.z -= Z;
+          
+          // reset when star is out of the view field
+          if (n.z < Z || n.px > width || n.py > height)
+          {
+             // reset star
+             resetstar(n);
+          }
+       }
+       
+       socket.emit('commandList', commands);
+
+       // colour cycle sinewave rotation
+       cycle += 0.01;
+       stats.end();
+
+   }, 1000/40);
+   
+   
+};
+requestAnimFrame(rf);
+
 
 

@@ -30,3 +30,29 @@ function clearScreen()
 	context.clearRect(0, 0, canvas.width, canvas.height);
 	context.restore();
 }
+
+function line(x1, y1, x2, y2)
+{
+coordinates = []
+coordinates.push(x1);
+coordinates.push(y1);
+coordinates.push(x2);
+coordinates.push(y2);
+context.beginPath();
+context.moveTo(x1, y1);
+context.lineTo(x2, y2);
+context.stroke();
+}
+
+/*Sets the value of a variable.
+Make sure that the variable you
+want to set it already defined. Not
+doing so will define the variable
+in global scope*/
+
+function setVariable(varname, value){
+
+	var evalString = varname + "=" + value + ";";
+	console.log("Just executed: " + evalString);
+	return true;
+}

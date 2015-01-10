@@ -190,5 +190,17 @@ io.listen(server).on('connection', function(socket){
 		socket.broadcast.emit('action', functionName, toSendArgs);
 	});
 
+	socket.on('commandList', function(commands){
+
+		for(var i in commands){
+			var command = commands[i];
+
+			if(command["type"] == "pos")
+				scale(command["args"]);
+		}
+
+		socket.broadcast.emit('commandList', commands);
+	});
+
 });
 
