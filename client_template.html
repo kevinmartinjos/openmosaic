@@ -7,15 +7,25 @@
 		<canvas id="canvas" width="400" height="400"></canvas>
 		<script src="primitives.js"></script>
 		<script>
+
+		var globals = {
+			kev: 0
+		};
+
+		var kev = 0;
+
+
 			var socket = io.connect();
 			var prev_x = 0;
 			var prev_y = 0;
+			
 
 			canvas = document.getElementById("canvas");
 			context = canvas.getContext("2d");
-			canvas.width = window.innerWidth;
-			canvas.height = window.innerHeight;
+			canvas.width = 400;
+			canvas.height = 400;
 			context.strokeStyle = "#fff";
+			context.globalAlpha = 0.25;
 
 			socket.emit('canvasHello', [canvas.width, canvas.height]);
 			console.log(canvas.width + "," + canvas.height);

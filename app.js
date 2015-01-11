@@ -25,9 +25,11 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 /*All code that goes to rendering the original canvas 
 SHOULD be in app.js*/
 
+
 /*code that displays the fps bar*/
 /**
 * @author mrdoob / http://mrdoob.com/
+*https://github.com/mrdoob/stats.js/
 */
 var Stats = function () {
 var startTime = Date.now(), prevTime = startTime;
@@ -280,12 +282,12 @@ var rf = function()
 	       */
 
              
-            /* commands.push({
+             commands.push({
 		       	'func': 'setVariable',
 		       	'type': "var",
 		       	'args': {
 		       		"a": "'context.strokeStyle'",
-		       		"b": "\""+context.strokeStyle+"\""
+		       		"b": "\"'"+context.strokeStyle+"'\""
 		       	}
        		});
 
@@ -298,7 +300,7 @@ var rf = function()
 		       		"a": "'context.lineWidth'",
 		       		"b": "\""+context.lineWidth+"\""
 		       	}
-       		});*/
+       		});
 
              line(xx + cx, yy + cy, n.px + cx, n.py + cy);
              var x1 = xx + cx;

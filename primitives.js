@@ -44,6 +44,7 @@ context.lineTo(x2, y2);
 context.stroke();
 }
 
+
 /*Sets the value of a variable.
 Make sure that the variable you
 want to set it already defined. Not
@@ -52,7 +53,6 @@ in global scope*/
 
 function setVariable(varname, value){
 
-	var evalString = varname + "=" + value + ";";
-	console.log("Just executed: " + evalString);
-	return true;
+	var evalString = "(" + varname + "=" + value + ")";
+	eval(evalString);
 }
