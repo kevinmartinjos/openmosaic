@@ -21,9 +21,9 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 var http = require("http");
 var sys = require("sys");
 var fs = require("fs");
-var ds = require("./data_structures.js");
+var ds = require("./scripts/data_structures.js");
 var io = require('socket.io');
-var packer = require("./packer.js");
+var packer = require("./scripts/packer.js");
 
 var client_template = "./client_template.html"
 

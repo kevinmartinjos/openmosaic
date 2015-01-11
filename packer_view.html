@@ -7,21 +7,21 @@
 		<canvas id="canvas" width="200" height="200"></canvas>
 		<script>
 			var socket = io.connect();
-			canvas = document.getElementById("canvas");
-			context = canvas.getContext("2d");
+			var canvas = document.getElementById("canvas");
+			var context = canvas.getContext("2d");
 			context.font = "16px Arial";
 
 			//Just to let the server know about packer_view's socket.
-			//Trust me, this is needed.
 			socket.emit('packer_view');
 
 			socket.on('packerSetBound', function(width, height)
 			{
-				console.log("setting bounds to : " + width + "," + height);
+				//console.log("setting bounds to : " + width + "," + height);
 				canvas.width = width;
 				canvas.height = height;
 			});
 
+			//Draw a rectangle representing a client canvas
 			socket.on('packerDrawRectangle', function(x, y, width, height, id)
 			{
 				console.log("Drawing at "+x+","+y + "width : " + width + " height " + height);
@@ -38,6 +38,7 @@
 			
 			});
 
+			//Draw an unfilled rectangle to show free space
 			socket.on('packerDrawRectangleFree', function(x, y, width, height, id)
 			{
 				console.log("DrawingFree rect at "+x+","+y + "width : " + width + " height " + height);

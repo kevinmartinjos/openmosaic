@@ -1,3 +1,22 @@
+<!--
+copyright © Kevin Martin Jose
+
+This file is part of openmosaic.
+
+openmosaic is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+openmosaic is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
 <html>
 	<head>
 		<script src="/socket.io/socket.io.js"></script>
@@ -5,58 +24,53 @@
 
 	<body>
 		<canvas id="canvas" width="400" height="400"></canvas>
-		<script src="primitives.js"></script>
+		<script src="scripts/util.js"></script>
 		<script>
-
-		var globals = {
-			kev: 0
-		};
-
-		var kev = 0;
-
-
 			var socket = io.connect();
 			var prev_x = 0;
 			var prev_y = 0;
 			
 
-			canvas = document.getElementById("canvas");
-			context = canvas.getContext("2d");
+			var canvas = document.getElementById('canvas');
+			var context = canvas.getContext('2d');
+			
+			//set the dimensions of the client canvas
 			canvas.width = 400;
 			canvas.height = 400;
-			context.strokeStyle = "#fff";
 			context.globalAlpha = 0.25;
 
+			//Let the server know about the connected client canvas
 			socket.emit('canvasHello', [canvas.width, canvas.height]);
 			console.log(canvas.width + "," + canvas.height);
 
-			//functionName is a string
-			socket.on('action', function(functionName, args){
-				var evalString = functionName + "(" + args + ")";
-				var rc = eval(evalString);
-			});
-
+			//Translate the origin of the canvas
 			socket.on('translate', function(x, y){
-				console.log("Translated to : " + x + "," + y);
+				console.log('Translated to : ' + x + ',' + y);
 				context.translate(prev_x * -1, prev_y * -1);
 				context.translate(x, y);
 				prev_x = x;
 				prev_y = y;
 			});
 
+			//Accepts a list of commands from server and executes it
 			socket.on('commandList', function(commands){
 
 				for(var i in commands){
-					command = commands[i];
+					var command = commands[i];
 					var argString = "";
 					var args = command["args"];
+					
 					for(var j in args){
-						argString = argString + args[j] + ",";
+						argString = argString + args[j] + ',';
 					}
+					
+					//getting rid of the ending ","
 					if(argString.length != 0)
 						argString = argString.substring(0, argString.length-1);
 
-					var evalString = command["func"] + "(" + argString + ")"
+					var evalString = command['func'] + '(' + argString + ')';
+					
+					//eval should be avoided. 
 					eval(evalString);
 				}
 			});

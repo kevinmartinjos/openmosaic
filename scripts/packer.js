@@ -17,18 +17,33 @@ You should have received a copy of the GNU General Public License
 along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*This module calculates how the client screens should be arranged
+so as to make some sense out of the total frame. The results of 
+the computations done here are viewed on packer_view.html*/
+
 var sys = require("sys");
 //var io = require("socket.io-client");
 //var socket = io.connect("http://localhost:8000", {reconnect: true});
 var ds = require("./data_structures.js");
 
+
+//How it works:
+//Imagine a really large rectangle. We fill the rectangle
+//with our client canvas one by one, so that the resulting
+//arrangement of clients is closes to our required
+//aspect ratio.
+//Refer to Matt Perdeck's article for more :
+//http://www.codeproject.com/Articles/210979/Fast-optimizing-rectangle-packing-algorithm-for-bu
+
 function PackerProperties(){};
 
+//_verbose - show debug logs if true
 function setup(_verbose)
 {
 	PackerProperties.max_width = 0;
 	PackerProperties.max_height = 0;
 
+	//The initial dimensions of the packer
 	PackerProperties.bounding_width = 1 << 12;
 	PackerProperties.bounding_height = 1 << 12;
 
@@ -48,7 +63,7 @@ sortByOrdinate = function(canvas_list){
 		{	
 			if(canvas_list[j].height > canvas_list[j+1].height)
 			{
-				temp = canvas_list[j];
+				var temp = canvas_list[j];
 				canvas_list[j] = canvas_list[j+1];
 				canvas_list[j+1] = temp;
 			}
@@ -66,18 +81,19 @@ function _guillotine(bounding_block, canvas)
 	if(PackerProperties.verbose == true)
 		sys.puts("_guillotine");
 
-	new_x = canvas.x + canvas.width;
-	new_y = canvas.y + canvas.height;
+	var new_x = canvas.x + canvas.width;
+	var new_y = canvas.y + canvas.height;
 
 	if(new_x > PackerProperties.bounding_width || new_y > PackerProperties.bounding_height)
 		return null;
 
 	//The horizontal partition
-	horizontal = new ds.CanvasBlock(bounding_block.width - canvas.width, canvas.height, true);
+	var horizontal = new ds.CanvasBlock(bounding_block.width - canvas.width, canvas.height, true);
 	horizontal.setOrigin(new_x, canvas.y);
 	horizontal.free = true;
 
-	vertical = new ds.CanvasBlock(bounding_block.width, bounding_block.height - canvas.height, true);
+	//vertical partition
+	var vertical = new ds.CanvasBlock(bounding_block.width, bounding_block.height - canvas.height, true);
 	vertical.setOrigin(canvas.x, new_y);
 	vertical.free = true;
 
@@ -95,7 +111,8 @@ function _findInsertLocation(canvas, blockTree)
 {
 	var location = null;
 
-	//An uncommon value
+	//An uncommon value to hold the 
+	//best aspect ratio seen so far
 	var best_ratio = 100;
 
 	for(var i=0; i<blockTree.length; i++)
@@ -104,8 +121,8 @@ function _findInsertLocation(canvas, blockTree)
 		{
 			if(blockTree[i].width >= canvas.width && blockTree[i].height >= canvas.height)
 			{
-				predicted_width = PackerProperties.max_width;
-				predicted_height =PackerProperties.max_height;
+				var predicted_width = PackerProperties.max_width;
+				var predicted_height =PackerProperties.max_height;
 
 				if(blockTree[i].x + canvas.width > PackerProperties.max_width)
 				{
@@ -119,7 +136,7 @@ function _findInsertLocation(canvas, blockTree)
 
 				var p_ratio = predicted_width/predicted_height;
 
-				//After each "mock insertion", we check if the predicted
+				//we check if the predicted
 				//aspect ratio is any better
 				if(Math.abs(PackerProperties.aspect_ratio - p_ratio) < Math.abs(PackerProperties.aspect_ratio - best_ratio))
 				{
@@ -239,24 +256,9 @@ function _compactFreeBlocks(blockTree)
 }
 
 
-//Clean this code (remove this function)
-function render(blockTree)
-{
-	
-	socket.emit('setBound', PackerProperties.max_width, PackerProperties.max_height);
-	for(var i=0; i<blockTree.length; i++)
-	{
-		if(blockTree[i].free == true)
-			socket.emit('drawRectangleFree', blockTree[i]);
-		else
-			socket.emit('drawRectangle', blockTree[i]);
-	}
-}
-
 module.exports.PackerProperties = PackerProperties;
 module.exports.verbose = PackerProperties.verbose;
 module.exports.bounding_width = PackerProperties.bounding_width;
 module.exports.bounding_height = PackerProperties.bounding_height;
 module.exports.pack = pack;
-module.exports.render = render;
 module.exports.setup = setup;
