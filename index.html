@@ -19,22 +19,17 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 <html>
 	<head>
 		<script src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript" src="scripts/p5.min.js"></script>
 	</head>
 	<body>
-		<canvas id="canvas" width="400" height="400" tabindex='1'></canvas>
-		
-		<script> 
-			var socket = io.connect('http://127.0.0.1:8000');
-			canvas = document.getElementById('canvas');
-			context = canvas.getContext('2d');
 
-			//let the server know that this is the master canvas
-			socket.emit('master', canvas.width, canvas.height);
-			 
-		</script>
-
-		<script src="scripts/util.js"></script>
 		<!--load the app and execute it -->
-		<script type="text/javascript" src="scripts/app.js"></script>
+		<script type="text/javascript" src="scripts/sketch.js"></script>
+		<script>
+			var socket = io.connect('http://127.0.0.1:8000');
+			//let the server know that this is the master canvas
+			var canvas = document.getElementById('defaultCanvas');
+			socket.emit('master', Globals.width, Globals.height);
+		</script>
 	</body>
 </html>

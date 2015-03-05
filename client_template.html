@@ -23,58 +23,28 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 	</head>
 
 	<body>
-		<canvas id="canvas" width="400" height="400"></canvas>
-		<script src="scripts/util.js"></script>
 		<script>
 			var socket = io.connect();
-			var prev_x = 0;
-			var prev_y = 0;
+		</script>
+		<script src = '/scripts/loader.js'></script>
+		<script>
+			var syncList = [];
+			socket.emit('canvasHello', [400, 400]);
 			
-
-			var canvas = document.getElementById('canvas');
-			var context = canvas.getContext('2d');
-			
-			//set the dimensions of the client canvas
-			canvas.width = 400;
-			canvas.height = 400;
-			context.globalAlpha = 0.25;
-
-			//Let the server know about the connected client canvas
-			socket.emit('canvasHello', [canvas.width, canvas.height]);
-			console.log(canvas.width + "," + canvas.height);
-
-			//Translate the origin of the canvas
-			socket.on('translate', function(x, y){
-				console.log('Translated to : ' + x + ',' + y);
-				context.translate(prev_x * -1, prev_y * -1);
-				context.translate(x, y);
-				prev_x = x;
-				prev_y = y;
+			socket.on('translate', function(x, y, scale){
+				console.log('Translating to : ' + x + ',' + y);
+				setMosaic(true);
+				initMosaic(x, y, scale.x, scale.y);
 			});
 
-			//Accepts a list of commands from server and executes it
-			socket.on('commandList', function(commands){
+			socket.on('load', function(){
+				loadScript("scripts/p5.min.js");
 
-				for(var i in commands){
-					var command = commands[i];
-					var argString = "";
-					var args = command["args"];
-					
-					for(var j in args){
-						argString = argString + args[j] + ',';
-					}
-					
-					//getting rid of the ending ","
-					if(argString.length != 0)
-						argString = argString.substring(0, argString.length-1);
+				loadScript("scripts/sketch.js");
 
-					var evalString = command['func'] + '(' + argString + ')';
-					
-					//eval should be avoided. 
-					eval(evalString);
-				}
 			});
 
+			
 		</script>
 	</body>
 </html>

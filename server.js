@@ -25,34 +25,35 @@ var ds = require("./scripts/data_structures.js");
 var io = require('socket.io');
 var packer = require("./scripts/packer.js");
 
-var client_template = "./client_template.html"
+var clientTemplate = "./client_template.html"
 
-var port = 8000;
-var localPath = __dirname;
-var socket_list = [];
-
-var verbose = false;
-
-var init_width;
-var init_height;
-
-var canvas_list = [];
-
-var socket_count=0;
+var Globals = {
+	port: 8000,
+	localPath: __dirname,
+	socketList: [],
+	verbose: false,
+	initWidth: 400,
+	initHeight: 400,
+	canvasList: [],
+	packedBlockTree: [],
+	socketCount: 0
+};
 
 //Draw the arrangement of the canvas blocks at packer_view.html
 function viewLayout(blockTree, _socket)
 {
-	socket_list.packer_view.emit('packerSetBound', packer.PackerProperties.max_width, packer.PackerProperties.max_height);
+	Globals.socketList.packer_view.emit('packerSetBound', packer.PackerProperties.max_width, packer.PackerProperties.max_height);
 	for(var i=0; i<blockTree.length; i++)
 	{
 		if(blockTree[i].free == true)
-			socket_list.packer_view.emit('packerDrawRectangleFree', blockTree[i].x, blockTree[i].y, blockTree[i].width, blockTree[i].height, blockTree[i].id);
+			Globals.socketList.packer_view.emit('packerDrawRectangleFree', blockTree[i].x, blockTree[i].y, blockTree[i].width, blockTree[i].height, blockTree[i].id);
 		else
-			socket_list.packer_view.emit('packerDrawRectangle', blockTree[i].x, blockTree[i].y, blockTree[i].width, blockTree[i].height, blockTree[i].id);
+			Globals.socketList.packer_view.emit('packerDrawRectangle', blockTree[i].x, blockTree[i].y, blockTree[i].width, blockTree[i].height, blockTree[i].id);
 	}
 }
 
+
+//translate the origin of the client canvases
 function translateCanvases(blockTree)
 {
 	for(var i=0; i<blockTree.length; i++)
@@ -60,52 +61,32 @@ function translateCanvases(blockTree)
 		if(blockTree[i].free == false)
 		{
 			//sys.puts("translating " + i +" to " + blockTree[i].x * -1 + "," + blockTree[i].y * -1);
-			blockTree[i].socket.emit('translate', blockTree[i].x * -1, blockTree[i].y * -1);
+			blockTree[i].socket.emit('translate', blockTree[i].x * -1, blockTree[i].y * -1, getScaleFactor());
 		}
 	}
 }
 
-/*Scale a single point to collective screen dimensions*/
-function scalePoint(point)
-{
-	scale_x = packer.PackerProperties.max_width/init_width;
-	scale_y = packer.PackerProperties.max_height/init_height;
-
-	point[0] = point[0] * scale_x;
-	point[1] = point[1] * scale_y;
-}
-
-/*Go through each and every key:value pairs
-in the json object and if it represents coordinate
-values, scale it according to the size of the client
-screens*/ 
-function scale(arg)
-{
-	for( var key in arg){
-		if(arg.hasOwnProperty(key)){
-
-			//if the key represents x, y coordinates
-			if(arg[key].length == 2)
-			{
-				scalePoint(arg[key]);
-			}
-		}
-	}
+//The scaling factor - by how much each point should be scaled to fit
+//the new total display
+function getScaleFactor(){
+	var scale_x = packer.PackerProperties.max_width/Globals.initWidth;
+	var scale_y = packer.PackerProperties.max_height/Globals.initHeight;
+	return {x: scale_x, y: scale_y};
 }
 
 server = http.createServer(function(req, res)
 {
 	//One file might load many other files. Creating the filename dynamically
 	//so that those files would be loaded by the node server
-	filename = localPath + req.url;
+	var filename = Globals.localPath + req.url;
 
-	if(verbose)
+	if(Globals.verbose)
 		sys.puts("Requesting for" + filename);
 
 	//If url ends with "/slave<no>", respond by sending the client template html file
 	if(/\/slave\d/.test(req.url))
 	{
-		fs.readFile(client_template, function(err, contents)
+		fs.readFile(clientTemplate, function(err, contents)
 		{
 			if(!err)
 			{
@@ -128,79 +109,50 @@ server = http.createServer(function(req, res)
 
 });
 
-server.listen(port);
+server.listen(Globals.port);
 
 io.listen(server).on('connection', function(socket){
 
-	if(verbose)
+	if(Globals.verbose)
 		sys.puts("client connected");
 	
 	
-	//Only canvases that emit this signal are added to the socket_list
+	//Only canvases that emit this signal are added to the Globals.socketList
 	socket.on('canvasHello', function(dimensions)
 	{
-		socket_count++;
-		socket_list.push(socket);
-		canvas = new ds.CanvasBlock(dimensions[0], dimensions[1], false);
+		Globals.socketCount++;
+		Globals.socketList.push(socket);
+		var canvas = new ds.CanvasBlock(dimensions[0], dimensions[1], false);
 		canvas.socket = socket;
-		canvas.id = socket_count;
+		canvas.id = Globals.socketCount;
 
-		canvas_list.push(canvas);
+		Globals.canvasList.push(canvas);
 
 		packer.setup(true);
-		blockTree = packer.pack(canvas_list);
+		Globals.packedBlockTree = packer.pack(Globals.canvasList);
 
 		//without this check, packer_view.html should be open
 		//every time we run the program or it will crash
-		if(socket_list.packer_view != null)
-			viewLayout(blockTree, socket);
+		if(Globals.socketList.packer_view != null)
+			viewLayout(Globals.packedBlockTree, socket);
 		
-		translateCanvases(blockTree);
+		//translateCanvases(blockTree);
 	});
 
 	//The packer_view is special, so it goes as an attribute
 	socket.on('packer_view', function(){
-		socket_list.packer_view = socket;
+		Globals.socketList.packer_view = socket;
 	});
 
-	socket.on('master', function(width, height)
-	{
-		init_width = width;
-		init_height = height;
+	//load and start are buttons in packer_view.html
+	socket.on('load', function(){
+		socket.broadcast.emit('load');
 	});
 
-	//callback accepts the name of the function,
-	//the number of arguments and the arguments
-	//as a json string
-	//Handles all the socket.emits in app.js
-	socket.on('action', function(functionName, args){
-		var jsonObject = JSON.parse(args);
-		
-		scale(jsonObject);
-
-		//making json object string
-		var toSendArgs = "";
-		for(var key in jsonObject){
-			if(jsonObject.hasOwnProperty(key))
-				toSendArgs = toSendArgs + jsonObject[key] + ",";
-		}
-		if(toSendArgs.length != 0)
-			toSendArgs = toSendArgs.substring(0, toSendArgs.length-1);
-				
-		socket.broadcast.emit('action', functionName, toSendArgs);
+	socket.on('start', function(){
+		translateCanvases(Globals.packedBlockTree);
 	});
 
-	socket.on('commandList', function(commands){
-
-		for(var i in commands){
-			var command = commands[i];
-
-			if(command["type"] == "pos")
-				scale(command["args"]);
-		}
-
-		socket.broadcast.emit('commandList', commands);
-	});
 
 });
 
