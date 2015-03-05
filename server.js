@@ -36,8 +36,15 @@ var Globals = {
 	initHeight: 400,
 	canvasList: [],
 	packedBlockTree: [],
-	socketCount: 0
+	socketCount: 0,
+	sketch: process.argv[2]
 };
+
+
+if(Globals.sketch == null){
+	sys.puts("provide a sketch name as argument");
+	process.exit(1);
+}
 
 //Draw the arrangement of the canvas blocks at packer_view.html
 function viewLayout(blockTree, _socket)
@@ -137,6 +144,7 @@ io.listen(server).on('connection', function(socket){
 			viewLayout(Globals.packedBlockTree, socket);
 		
 		//translateCanvases(blockTree);
+		socket.emit('setSketch', Globals.sketch);
 	});
 
 	//The packer_view is special, so it goes as an attribute

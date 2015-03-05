@@ -25,12 +25,20 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 	<body>
 		<script>
 			var socket = io.connect();
+			var sketch = null;
 		</script>
 		<script src = '/scripts/loader.js'></script>
 		<script>
 			var syncList = [];
 			socket.emit('canvasHello', [400, 400]);
 			
+			socket.on('setSketch', function(s_){
+				if(s_ == null)
+					console.log("ERROR: Invalid sketch name")
+				else
+					sketch = s_;
+			});
+
 			socket.on('translate', function(x, y, scale){
 				console.log('Translating to : ' + x + ',' + y);
 				setMosaic(true);
@@ -38,9 +46,9 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 			});
 
 			socket.on('load', function(){
-				loadScript("scripts/p5.min.js");
-
-				loadScript("scripts/sketch.js");
+				loadScript("scripts/p5.min.js", function(){});
+				
+				loadScript(sketch, function(){});
 
 			});
 
