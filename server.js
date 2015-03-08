@@ -37,7 +37,8 @@ var Globals = {
 	canvasList: [],
 	packedBlockTree: [],
 	socketCount: 0,
-	sketch: process.argv[2]
+	sketch: process.argv[2],
+	reachcount:0
 };
 
 
@@ -160,6 +161,20 @@ io.listen(server).on('connection', function(socket){
 	socket.on('start', function(){
 		translateCanvases(Globals.packedBlockTree);
 	});
+
+	socket.on("reached", function(){
+		
+		Globals.reachcount+=1;
+		sys.puts("reached "+Globals.reachcount+ " of "+Globals.socketCount);
+		if(Globals.reachcount==Globals.socketCount){
+			//socket.broadcast.emit('goahead');
+			for(var i=0; i<Globals.socketCount; i++){
+				Globals.socketList[i].emit('goahead');
+			}
+			sys.puts("go ahead broadcasted");
+			Globals.reachcount=0;
+		}
+	})
 
 
 });
