@@ -10,7 +10,7 @@ Ok, that's what they call multiplayer. But openmosaic does it differently. The p
 
 Openmosaic scales up a processing sketch to look good (and work) over many screens.
 
-Disclaimer: As of now, the functionalities are limited. For instance, a client won't be informed about a mouse click on another client as of now. Incomplete.
+Disclaimer: As of now, the functionalities are limited. For instance, a client won't be informed about a key press on another client as of now. Incomplete.
 
 
 ####License
