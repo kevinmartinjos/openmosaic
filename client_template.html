@@ -29,7 +29,9 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 		</script>
 		<script src = '/scripts/loader.js'></script>
 		<script>
-			var syncList = [];
+
+			var canvas = null;
+
 			socket.emit('canvasHello', [400, 400]);
 			
 			socket.on('setSketch', function(s_){
@@ -43,15 +45,35 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 				console.log('Translating to : ' + x + ',' + y);
 				setMosaic(true);
 				initMosaic(x, y, scale.x, scale.y);
-			});
+				mosaicSync(300, function(){
+					socket.emit('lock');
+				});
 
-			socket.on('load', function(){
-				loadScript("scripts/p5.min.js", function(){});
+				canvas = document.getElementById('defaultCanvas');
 				
-				loadScript(sketch, function(){});
-
+				canvas.addEventListener('click', function(e){
+					socket.emit('mousePressed', mouseX, mouseY);
+				});
+				
 			});
 
+			socket.on('loadMosaicSketch', function(){
+				loadScript("scripts/p5.min.js", function(){});	
+				loadScript(sketch, function(){});
+			});
+
+			socket.on('unlock', function(){
+				loop();
+			});
+
+			socket.on('mousePressed', function(e){
+				console.log('mousePressed received');
+				var e = document.createEvent('MouseEvents');
+				e.initMouseEvent('click', true, true, window, 0, 0, 0, mouseX, mouseY, false, false, false, false, 0, null);
+				
+				_updateMouseCoords(e);
+				mousePressed();
+			});
 			
 		</script>
 	</body>

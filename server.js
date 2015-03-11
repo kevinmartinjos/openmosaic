@@ -68,7 +68,7 @@ function translateCanvases(blockTree)
 	{
 		if(blockTree[i].free == false)
 		{
-			//sys.puts("translating " + i +" to " + blockTree[i].x * -1 + "," + blockTree[i].y * -1);
+			sys.puts("translating " + i +" to " + blockTree[i].x * -1 + "," + blockTree[i].y * -1);
 			blockTree[i].socket.emit('translate', blockTree[i].x * -1, blockTree[i].y * -1, getScaleFactor());
 		}
 	}
@@ -154,28 +154,29 @@ io.listen(server).on('connection', function(socket){
 	});
 
 	//load and start are buttons in packer_view.html
-	socket.on('load', function(){
-		socket.broadcast.emit('load');
+	socket.on('loadMosaicSketch', function(){
+		socket.broadcast.emit('loadMosaicSketch');
 	});
 
-	socket.on('start', function(){
+	socket.on('translateCanvases', function(){
 		translateCanvases(Globals.packedBlockTree);
 	});
 
-	socket.on("reached", function(){
+	socket.on('lock', function(){
 		
 		Globals.reachcount+=1;
-		sys.puts("reached "+Globals.reachcount+ " of "+Globals.socketCount);
 		if(Globals.reachcount==Globals.socketCount){
 			//socket.broadcast.emit('goahead');
 			for(var i=0; i<Globals.socketCount; i++){
-				Globals.socketList[i].emit('goahead');
+				Globals.socketList[i].emit('unlock');
 			}
-			sys.puts("go ahead broadcasted");
 			Globals.reachcount=0;
 		}
-	})
+	});
 
+	socket.on('mousePressed', function(x, y){
+		socket.broadcast.emit('mousePressed', x, y);
+	});
 
 });
 
