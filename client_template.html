@@ -41,6 +41,7 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 					sketch = s_;
 			});
 
+			//translate the canvas to another location
 			socket.on('translate', function(x, y, scale){
 				console.log('Translating to : ' + x + ',' + y);
 				setMosaic(true);
@@ -48,6 +49,7 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 				mosaicSync(300, function(){
 					socket.emit('lock');
 				});
+
 
 				canvas = document.getElementById('defaultCanvas');
 				
@@ -57,11 +59,13 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 				
 			});
 
+			//load the sketch and run. No scaling or translation is applied
 			socket.on('loadMosaicSketch', function(){
 				loadScript("scripts/p5.min.js", function(){});	
 				loadScript(sketch, function(){});
 			});
 
+			//for syncronisation
 			socket.on('unlock', function(){
 				loop();
 			});
@@ -71,7 +75,10 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 				var e = document.createEvent('MouseEvents');
 				e.initMouseEvent('click', true, true, window, 0, 0, 0, mouseX, mouseY, false, false, false, false, 0, null);
 				
+				//internal function. See src/input/mouse.js in p5.js source
 				_updateMouseCoords(e);
+
+				//call the mousePressed() function in the sketch
 				mousePressed();
 			});
 			

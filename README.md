@@ -1,6 +1,17 @@
 ###Openmosaic Readme
 
-Openmosaic uses javascript and nodejs to split up a sketch (html5 canvas thing) into multiple canvases. Imagine playing the classic game of snakes accross multiple screens.
+Openmosaic is an experimental framework that allows you to run processing sketches across multiple screens. Openmosaic makes use of the fantastic [p5js](p5js.org) library and nodejs to make this happen.
+
+####What is openmosaic, again?
+
+Imagine that you are playing the classic game of [pong](http://cssdeck.com/labs/ping-pong-game-tutorial-with-html5-canvas-and-sounds), with your friend and on a phone screen. Imagine that your paddle is on your screen, and your friend's paddle is on his/her phone screen. The game begins. The puck hits your paddle, rebounds, and travels ACROSS the screen to your friends side.
+
+Ok, that's what they call multiplayer. But openmosaic does it differently. The pong game that you just ran was not meant/expected to work on 2 screens. Instead of just you and your friend's phone, if you decided to hook up 4 ipads and run the pong game, the entire display of the game would scale up to fill the 4 ipad screens.
+
+Openmosaic scales up a processing sketch to look good (and work) over many screens.
+
+Disclaimer: As of now, the functionalities are limited. For instance, a client won't be informed about a mouse click on another client as of now. Incomplete.
+
 
 ####License
 
@@ -25,7 +36,7 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 
 1) Nodejs
 
-2) socket.io node packet [use 'npm install socket.io']
+2) socket.io node module [use 'npm install socket.io']
 
 2) A modern web browser that supports html5 (chrome, chromium or firefox or IE 10)
 
@@ -39,33 +50,23 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 
 4) Follow this instructions in the *precise* order given below: 
 
-    a) Use terminal to `cd` to the directory where you downloaded openmosaic to and do `node server.js`. This should start the server
+    a) Use terminal to `cd` to the directory where you downloaded openmosaic to and do `node server.js scripts/<sketchname>`. For example, `node server.js scripts/vanilla.js`. This should start the server
 
     b) Open your browser and go to `http://localhost:8000/packer_view.html`. That should open a blank screen
 
-    c) Open a new window and go to `http://localhost:8000/slave1`. That should open a blank page too
+    c) Open a new window and go to `http://localhost:8000/slave1`. That should open a blank page too. 
 
     d) Switch the window to packer_view.html and now you should see a green box.
 
     e) Open another new window and go to `http://localhost:8000/slave2`. This should open up another new blank page. The number next to `slave` doesn't really matter. The server will open a blank page as long as the URL starts with `slave` and ends with a number
 
-    f) The browser windows `slave1` and `slave2` that you have opened are basically 2 clients connected to our server. Think of them as two individual screens. Look at packer_view.html now and you should see TWO green boxes. Try scrolling a bit. The boxes are the exact same dimensions as the client screen. Since our two new browser windows are probably in widescreen resolution, the green boxes that represent them don't fit on the screen. I will fix this later. The blue number on the middle of the box represents how the client screens should be arranged physically to make sense of the collective picture.
+    f) The browser windows `slave1` and `slave2` that you have opened are basically 2 clients connected to our server. Think of them as two individual screens. Look at packer_view.html now and you should see TWO green boxes. The blue number on the middle of the box represents how the client screens should be arranged physically to make sense of the collective picture. Make sure you resize and arrange slave1 and slave2 as shown in packer_view.html.
 
-    g) Open another new window and go to `localhost:8000/index.html`. Resize the slave1 and slave2 windows so that you can see both the slaves and your index.html at the same time. This will open a page with a small line moving across the screen. Move the mouse over the canvas to focus it. Now try pressing arrow keys on the keyboard to watch the line move in different directions.
+    g) In packer_view.html press the `load` button. Now you should see the processing sketch running on both slave canvases. 
 
-    h) If everything went correctly, you should be able to see the line moving from the pages slave1 to slave2 (or reverse) as it moves from left to right in index.html
+    h) Now press the `translate` button and look at the slaves. Both the slaves together display the sketch now. What happened was that the 2 canvases were clubbed together to form a larger display. 
 
-5) To better understand what's going on, open pages slave1 and slave2 on different computers (or preferably, smart phones).
-
-6) Run the server on a computer and have your phones (or other computers) connected to the same network.
-
-7) Open `localhost:8000/packer_view.html` on a browser on your computer, or open `<ipaddress_of_server>:8000/packer_view.html` from somewhere else.
-
-8) Instead of `localhost:8000/slave1`, go to `<ipaddress_of_server>:8000/slave1` on your phone browser. Eg: `192.168.1.15:8000/slave1`. Similarly open slave2 on another phone
-
-9) look at packer_view.html page on your computer and arrange the phones accordingly
-
-10) open `localhost:8000/index.jsp` (or `<ipaddress_server>:8000/index.html` from anywhere else) on your computer running the server and you should see a line moving left to right. If everything went right, you should see the same line moving from one phone screen to another. Try moving mouse over the canvas in index.html to bring focus and press keyboard buttons to change direction of movement of the line.
+You can, of course, open the 2 slaves on two phone screens if you know the ip address of your system.
 
 ####That did not work
 
@@ -73,23 +74,18 @@ If you followed the above instructions and you still could not get openmosaic to
 
 ####Directory structure
 
-1) server.js - the nodejs server. Takes information from index.html, performs some simple calculations, and distributes it to all the clients.
+1) server.js - Facilitates message passing between the differenc clients, and the backbone of the framework.
 
-2) app.js - contains the actual code that runs in index.html. If you want to make your own game/program that runs accross multiple screens, this is the file you should edit
+2) packer_view.html - Sort of like a control panel. You see the orientation of the total screen on this page and also initiate the sketch by pressing the buttons in here.
 
-3) packer.js - Responsible for the green boxes in packer_view.html. packer.js determines how you should arrange the screens of your client so that the collective image/frame would correspond to the content in index.html canvas. I spend hours trying to come up with a working algorithm and finally hit upon this [great article](http://www.codeproject.com/Articles/210979/Fast-optimizing-rectangle-packing-algorithm-for-bu). The algorithm is adapted to suit my needs.
+3) client_template.html - This page is loaded when you navigate to localhost:8000/slave<insert_a_number_here>. Also contains some framework specific initializations
 
-4) primitives.js - contains one useful function I wrote to make things easier. Will be removed sooner or later. Don't bother
-
-5) data_structures.js - Contains data structures used in packer.js
-
-6) client_template.html - the file that gets loaded every time you open a slave. eg('localhost:8000/slave5')
-
-7) packer_view.html - contains the result of packer.js
-
-8) index.html - takes code from app.js and executes it
+4) contains the various libraries and source files needed and also some demo sketches. I will reorganize the folder into something that makes more sense, but later.
 
 ####How it works
 
-The node server calls packer.js every time a client connects to it. Packer.js gets the dimensions of the client screen and decides how the screen(s) should be arranged. When another client connects, packer.js is called again. The arrangement of screens can be viewed by navigating to packer_view.html
-Opening index.html on the browser loads all the code in app.js and runs it in a canvas on index.html. If you go through app.js, you will see that a signal is emitted each time a function is called. The server distributes this signal to all the clients after scaling the arguments.For example, if you call `lineTo(200, 200)` in app.js, and you have 4 clients of screen size 200 x 200 each, each client will get a signal that asks it execute the function `lineTo` but with different arguments. 
+The node server calls scripts/packer.js every time a client connects to it. Packer.js gets the dimensions of the client screen and decides how the screen(s) should be arranged. When another client connects, packer.js is called again. The arrangement of screens can be viewed by navigating to packer_view.html
+
+When you press the load button, the p5js sketch that you passed as a command line argument to the server is loaded to all the client canvases. When you press the translate button, the origin of each of these canvases is translated as determined by the methods in packer.js. It contains a rectangle packing algorithm and I got it from Matt Perdeck's [article](http://www.codeproject.com/Articles/210979/Fast-optimizing-rectangle-packing-algorithm-for-bu).
+
+The packing algorithm also determines by how much each of the shapes in the sketch should be scaled up so that they fit the new combined display. I've hacked the [p5js](p5js.org) library and added some scaling functions to make this happen. See the [openmosaic branch](https://github.com/lonesword/p5.js/tree/openmosaic) of p5.js in my repository to see how I've reworked p5.js to my needs. 

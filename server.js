@@ -153,7 +153,7 @@ io.listen(server).on('connection', function(socket){
 		Globals.socketList.packer_view = socket;
 	});
 
-	//load and start are buttons in packer_view.html
+	//load and translate are buttons in packer_view.html
 	socket.on('loadMosaicSketch', function(){
 		socket.broadcast.emit('loadMosaicSketch');
 	});
@@ -162,9 +162,12 @@ io.listen(server).on('connection', function(socket){
 		translateCanvases(Globals.packedBlockTree);
 	});
 
+	//used for synchronization
 	socket.on('lock', function(){
 		
 		Globals.reachcount+=1;
+
+		//wait till all clients have reached a lock state
 		if(Globals.reachcount==Globals.socketCount){
 			//socket.broadcast.emit('goahead');
 			for(var i=0; i<Globals.socketCount; i++){
