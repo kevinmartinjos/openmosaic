@@ -20,10 +20,11 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 //Main server
 var http = require("http");
 var sys = require("sys");
+var swig = require("swig");
 var fs = require("fs");
-var ds = require("./scripts/data_structures.js");
+var ds = require("./js/data_structures.js");
 var io = require('socket.io');
-var packer = require("./scripts/packer.js");
+var packer = require("./js/packer.js");
 
 var clientTemplate = "./client_template.html"
 
@@ -94,14 +95,17 @@ server = http.createServer(function(req, res)
 	//If url ends with "/slave<no>", respond by sending the client template html file
 	if(/\/slave\d/.test(req.url))
 	{
-		fs.readFile(clientTemplate, function(err, contents)
+		var rendered = swig.renderFile(clientTemplate, {sketch: Globals.sketch});
+		res.statusCode = 200;
+		res.end(rendered);
+		/*fs.readFile(clientTemplate, function(err, contents)
 		{
 			if(!err)
 			{
 				res.statusCode = 200;
 				res.end(contents);
 			}
-		});
+		});*/
 	}
 	else
 	{

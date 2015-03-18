@@ -16,20 +16,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 -->
+
 <html>
 	<head>
 		<script src="/socket.io/socket.io.js"></script>
-		<script type="text/javascript" src="scripts/p5.min.js"></script>
+		<script src = "/scripts/loader.js"></script>
+		<script src = "/scripts/p5.min.js"></script>
+		<script src = "/scripts/mosaic.js"></script>
+		<script src = "{{ sketch }}"></script>
 	</head>
-	<body>
 
-		<!--load the app and execute it -->
-		<script type="text/javascript" src="scripts/sketch.js"></script>
-		<script>
-			var socket = io.connect('http://127.0.0.1:8000');
-			//let the server know that this is the master canvas
-			var canvas = document.getElementById('defaultCanvas');
-			socket.emit('master', Globals.width, Globals.height);
-		</script>
+	<body>
 	</body>
 </html>
