@@ -26,7 +26,7 @@ var ds = require("./js/data_structures.js");
 var io = require('socket.io');
 var packer = require("./js/packer.js");
 
-var clientTemplate = "./html/client_template.html"
+var clientTemplate = "./client_template.html"
 
 var Globals = {
 	port: 8000,
