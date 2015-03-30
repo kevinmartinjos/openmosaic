@@ -10,8 +10,8 @@ p5.prototype.syncInterval = 0;
 p5.prototype.syncCallback = null;
 
 p5.prototype.mosaicTranslate = function(x_, y_){
-	this._originx = x_;
-	this._originy = y_;
+	p5.prototype._originx = x_;
+	p5.prototype._originy = y_;
 	this.translate(this._originx, this._originy);
 };
 
@@ -30,14 +30,11 @@ p5.prototype.mosaicInit = function(){
 	});
 
 	var canvas = document.getElementById('defaultCanvas');
-	canvas.addEventListener('click', function(e){
-			socket.emit('mousePressed', mouseX + p5.prototype._originx, mouseY + p5.prototype._originy);
-	});
 
 	socket.on('mousePressed', function(x, y){
 		var e = document.createEvent('MouseEvents');
 		e.initMouseEvent('click', true, true, window, 0, 0, 0, x, y, false, false, false, false, 0, null);
-			
+		console.log('received mouse : ' + x + ',' + y);
 		//internal function. See src/input/mouse.js in p5.js source
 		_updateMouseCoords(e);
 		//call the mousePressed() function in the sketch
@@ -49,6 +46,33 @@ p5.prototype.mosaicInit = function(){
 	});
 
 }
+
+/*Overriding the p5.js version of this function*/
+p5.prototype.onmousedown = function(e) {
+    var context = this._isGlobal ? window : this;
+    var executeDefault;
+
+    var e = new MouseEvent("mouseclick", {clientX: e.clientX - p5.prototype._originx,
+    										clientY: e.clientY - p5.prototype._originy});
+    this._setProperty('isMousePressed', true);
+    this._setProperty('mouseIsPressed', true);
+    this._setMouseButton(e);
+    this._updateMouseCoords(e);
+    if (typeof context.mousePressed === 'function') {
+      executeDefault = context.mousePressed(e);
+      if(executeDefault === false) {
+        e.preventDefault();
+      }
+    } else if (typeof context.touchStarted === 'function') {
+      executeDefault = context.touchStarted(e);
+      if(executeDefault === false) {
+        e.preventDefault();
+      }
+      this._updateTouchCoords(e);
+    }
+
+    socket.emit('mousePressed', mouseX, mouseY);
+};
 
 //scales an (x,y) pair by the scaling factor
 p5.prototype.mosaicScalePoint = function(point){
