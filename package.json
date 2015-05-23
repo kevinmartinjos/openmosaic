@@ -1,0 +1,32 @@
+{
+  "name": "openmosaic",
+  "version": "0.4.0",
+  "description": "Create p5.js sketches that span across multiple screens",
+  "main": "server.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "nodejs server.js /examples/sketch.js",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/lonesword/openmosaic"
+  },
+  "keywords": [
+    "p5.js",
+    "openmosaic",
+    "multiscreen",
+    "processing"
+  ],
+  "author": "Kevin Martin Jose",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/lonesword/openmosaic/issues"
+  },
+  "devDependencies": {
+    "socket.io": "~1.3.5",
+    "swig": "~1.4.2"
+  }
+}
