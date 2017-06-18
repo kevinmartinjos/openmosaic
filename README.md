@@ -1,8 +1,8 @@
-###Openmosaic Readme
+### Openmosaic Readme
 
 Openmosaic is an experimental framework that allows you to run processing sketches across multiple screens. Openmosaic makes use of the fantastic [p5js](p5js.org) library and nodejs to make this happen.
 
-####What is openmosaic, again?
+#### What is openmosaic, again?
 
 Imagine that you are playing the classic game of [pong](http://cssdeck.com/labs/ping-pong-game-tutorial-with-html5-canvas-and-sounds), with your friend and on a phone screen. Imagine that your paddle is on your screen, and your friend's paddle is on his/her phone screen. The game begins. The puck hits your paddle, rebounds, and travels ACROSS the screen to your friends side.
 
@@ -13,7 +13,7 @@ Openmosaic scales up a processing sketch to look good (and work) over many scree
 Disclaimer: All of the functionalities have not been implemented. See a demo of openmosaic [here](https://www.youtube.com/watch?v=uevvrnCXDJk). The interesting stuff starts at 2:26 (towards the end of the video)
 
 
-####License
+#### License
 
 copyright © Kevin Martin Jose
 
@@ -32,7 +32,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 
-####Requirements :
+#### Requirements :
 
 1) Nodejs
 
@@ -40,7 +40,7 @@ along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
 
 2) A modern web browser that supports html5 (chrome, chromium or firefox or IE 10)
 
-####How to :
+#### How to :
 
 1) I haven't tested this on windows. Should work fine.
 
@@ -67,11 +67,11 @@ g) Now press the `start` button and look at the slaves. Both the slaves together
 You can, of course, open the 2 slaves on two phone screens if you know the ip address of your system.
 Inorder to run your sketch with openmosaic, paste it in the /examples folder and repeat step 4.
 
-####That did not work
+#### That did not work
 
 If you followed the above instructions and you still could not get openmosaic to work, please open a new issue in github. Better yet, fix the problem and make a pull request :)
 
-####Directory structure
+#### Directory structure
 
 1) server.js - Facilitates message passing between the differenc clients, and the backbone of the framework.
 
@@ -81,7 +81,7 @@ If you followed the above instructions and you still could not get openmosaic to
 
 4) js : contains the various libraries and source files needed and also some demo sketches. I will reorganize the folder into something that makes more sense, but later.
 
-####How it works
+#### How it works
 
 The node server calls js/packer.js every time a client connects to it. Packer.js gets the dimensions of the client screen and decides how the screen(s) should be arranged. When another client connects, packer.js is called again. The arrangement of screens can be viewed by navigating to packer_view.html
 
