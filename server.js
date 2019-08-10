@@ -1,189 +1,81 @@
-/*
-copyright © Kevin Martin Jose
-
-This file is part of openmosaic.
-
-openmosaic is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-openmosaic is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with openmosaic.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-//Main server
-var http = require("http");
-var sys = require("sys");
-var swig = require("swig");
-var fs = require("fs");
-var ds = require("./js/data_structures.js");
-var io = require('socket.io');
-var packer = require("./js/packer.js");
-
-var clientTemplate = "./client_template.html"
-
-var Globals = {
-	port: 8000,
-	localPath: __dirname,
-	socketList: [],
-	verbose: false,
-	initWidth: 400,
-	initHeight: 400,
-	canvasList: [],
-	packedBlockTree: [],
-	socketCount: 0,
-	sketch: process.argv[2],
-	reachcount:0
-};
+const yargs = require("yargs");
+const fs = require('fs');
+const express = require('express');
+const app = express();
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
+const swig = require("swig");
 
 
-if(Globals.sketch == null){
-	sys.puts("provide a sketch name as argument");
-	process.exit(1);
+const options = yargs
+ .usage("Usage: -c <config file> -s <sketch file>")
+ .option("c", { alias: "config", describe: "Path to config file", type: "string", demandOption: true })
+ .option("s", { alias: "sketch", describe: "Path to sketch file", type: "string", demandOption: true })
+ .argv;
+
+const CLIENT_TEMPLATE = "./client_template.html"
+
+let rawdata = fs.readFileSync(options.config);
+let config = JSON.parse(rawdata);
+let connected_screens = [];
+let Globals = {
+	lock_count: 0
 }
 
-//Draw the arrangement of the canvas blocks at packer_view.html
-function viewLayout(blockTree, _socket)
-{
-	Globals.socketList.packer_view.emit('packerSetBound', packer.PackerProperties.max_width, packer.PackerProperties.max_height);
-	for(var i=0; i<blockTree.length; i++)
-	{
-		if(blockTree[i].free == true)
-			Globals.socketList.packer_view.emit('packerDrawRectangleFree', blockTree[i].x, blockTree[i].y, blockTree[i].width, blockTree[i].height, blockTree[i].id);
-		else
-			Globals.socketList.packer_view.emit('packerDrawRectangle', blockTree[i].x, blockTree[i].y, blockTree[i].width, blockTree[i].height, blockTree[i].id);
-	}
-}
+app.use(express.static('.'));
 
-
-//translate the origin of the client canvases
-function translateCanvases(blockTree)
-{
-	for(var i=0; i<blockTree.length; i++)
-	{
-		if(blockTree[i].free == false)
-		{
-			sys.puts("translating " + i +" to " + blockTree[i].x * -1 + "," + blockTree[i].y * -1);
-			blockTree[i].socket.emit('translate', blockTree[i].x * -1, blockTree[i].y * -1, getScaleFactor());
-		}
-	}
-}
-
-//The scaling factor - by how much each point should be scaled to fit
-//the new total display
-function getScaleFactor(){
-	var scale_x = packer.PackerProperties.max_width/Globals.initWidth;
-	var scale_y = packer.PackerProperties.max_height/Globals.initHeight;
-	return {x: scale_x, y: scale_y};
-}
-
-server = http.createServer(function(req, res)
-{
-	//One file might load many other files. Creating the filename dynamically
-	//so that those files would be loaded by the node server
-	var filename = Globals.localPath + req.url;
-
-	if(Globals.verbose)
-		sys.puts("Requesting for" + filename);
-
-	//If url ends with "/slave<no>", respond by sending the client template html file
-	if(/\/slave\d/.test(req.url))
-	{
-		var rendered = swig.renderFile(clientTemplate, {sketch: Globals.sketch});
-		res.statusCode = 200;
-		res.end(rendered);
-		/*fs.readFile(clientTemplate, function(err, contents)
-		{
-			if(!err)
-			{
-				res.statusCode = 200;
-				res.end(contents);
-			}
-		});*/
-	}
-	else
-	{
-		fs.readFile(filename, function(err, contents)
-		{
-			if(!err)
-			{
-				res.statusCode = 200;
-				res.end(contents);
-			}
-		});
-	}
-
+app.get('/', function(req, res){
+	res.send('<h1>Hello world</h1>');
 });
 
-server.listen(Globals.port);
+app.get('/screen/:name/', function(req, res){
+	const rendered = swig.renderFile(CLIENT_TEMPLATE, {sketch: "/" + options.sketch});
+	res.send(rendered);
+});
 
-io.listen(server).on('connection', function(socket){
-
-	if(Globals.verbose)
-		sys.puts("client connected");
-	
-	
-	//Only canvases that emit this signal are added to the Globals.socketList
-	socket.on('canvasHello', function(dimensions)
-	{
-		Globals.socketCount++;
-		Globals.socketList.push(socket);
-		var canvas = new ds.CanvasBlock(dimensions[0], dimensions[1], false);
-		canvas.socket = socket;
-		canvas.id = Globals.socketCount;
-
-		Globals.canvasList.push(canvas);
-
-		packer.setup(true);
-		Globals.packedBlockTree = packer.pack(Globals.canvasList);
-
-		//without this check, packer_view.html should be open
-		//every time we run the program or it will crash
-		if(Globals.socketList.packer_view != null)
-			viewLayout(Globals.packedBlockTree, socket);
-		
-		//translateCanvases(blockTree);
-		socket.emit('setSketch', Globals.sketch);
+app.get('/start/', (req, res) => {
+	connected_screens.forEach((screen_obj, index) => {
+		screen_obj.socket.emit('start');
 	});
+	res.send('<span>Sketch must have started</span>');
+});
 
-	//The packer_view is special, so it goes as an attribute
-	socket.on('packer_view', function(){
-		Globals.socketList.packer_view = socket;
-	});
+http.listen(3000, function(){
+	console.log('listening on *:3000');
+});
 
-	//load and translate are buttons in packer_view.html
-	socket.on('loadMosaicSketch', function(){
-		socket.broadcast.emit('loadMosaicSketch');
-	});
+io.on('connection', (socket) => {
+	console.log("User connected")
 
-	socket.on('translateCanvases', function(){
-		translateCanvases(Globals.packedBlockTree);
-	});
-
-	//used for synchronization
-	socket.on('lock', function(){
-		
-		Globals.reachcount+=1;
-
-		//wait till all clients have reached a lock state
-		if(Globals.reachcount==Globals.socketCount){
-			//socket.broadcast.emit('goahead');
-			for(var i=0; i<Globals.socketCount; i++){
-				Globals.socketList[i].emit('unlock');
-			}
-			Globals.reachcount=0;
+	socket.on('screen_ready', (screen_name) => {
+		if(!alreadyConnected(screen_name)) {
+			connected_screens.push({
+				'screen_name': screen_name,
+				'screen_config': config[screen_name],
+				'socket': socket
+			});
+			socket.emit('change_origin', config[screen_name].origin[0], config[screen_name].origin[1]);		
 		}
 	});
 
-	socket.on('mousePressed', function(x, y){
-		socket.broadcast.emit('mousePressed', x, y);
+	socket.on('lock', () => {
+		Globals.lock_count += 1;
+		if(Globals.lock_count == connected_screens.length){
+			connected_screens.forEach((screen_obj, index) => {
+				screen_obj.socket.emit('unlock');
+			});
+			Globals.lock_count = 0;
+		}
 	});
-
 });
 
+const alreadyConnected = (screen_name) => {
+	for(var i in connected_screens) {
+		screen_obj = connected_screens[i];
+		if(screen_name == screen_obj.screen_name){
+			return true;
+		}
+	}
+
+	return false;
+}

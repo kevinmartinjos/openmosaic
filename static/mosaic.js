@@ -1,4 +1,4 @@
-var socket = io.connect();
+var socket = io();
 
 p5.prototype._originx = 0;
 p5.prototype._originy = 0;
@@ -9,6 +9,12 @@ p5.prototype.mosaicStart = false;
 p5.prototype.syncInterval = 0;
 p5.prototype.syncCallback = null;
 
+const get_screen_name = () => {
+	const url = window.location.href;
+	let re = /screen\/(\w+)$/;
+	return re.exec(url)[1]
+
+}
 p5.prototype.mosaicTranslate = function(x_, y_){
 	p5.prototype._originx = x_;
 	p5.prototype._originy = y_;
@@ -17,14 +23,17 @@ p5.prototype.mosaicTranslate = function(x_, y_){
 
 p5.prototype.mosaicInit = function(){
 	
-	socket.emit('canvasHello', [width, height]);
+	socket.emit('screen_ready', get_screen_name());
 
 	mosaicSync(1, function(){
   		socket.emit('lock');
   	});
 
-	socket.on('translate', function(x, y, scale){
+	socket.on('change_origin', function(x, y, scale){
 		mosaicTranslate(x, y);
+	});
+
+	socket.on('start', () => {
 		p5.prototype.mosaicStart = true;
 		loop();
 	});
