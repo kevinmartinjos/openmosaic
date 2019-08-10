@@ -26,6 +26,7 @@ Options:
 ### To write your own sketch:
 
 1. Your p5.js sketch _must_ call `mosaicInit();` from inside `setUp()`. Refer to any of the bundled examples.
+
 2. Create a corresponding config.json file. Keys should be your screen names and each screen should specify an origin. Here is an example config:
 ```
 {
@@ -43,7 +44,12 @@ Options:
 	}
 }
 ```
+
 This indicates that you wish the sketch to be run across 4 clients - `my_screen_1`, `my_screen_2`, `alice_screen` and `bob_screen`
+
 3. Start the server by running `node server.js -c <config_file> -s <your_sketch_file>`
+
 4. To load a screen, point the browser to `http://localhost:3000/screen/<screen_name>/`. For example, to view `alice_screen`, point your browser to `http://localhost:3000/screen/alice_screen/`.
+
 5. Open a tab and go to`http://localhost:3000/start/` (or hit that URL from the terminal using CURL - it's a simple GET request) to "start" the sketch.
+
