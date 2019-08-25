@@ -1,6 +1,6 @@
 ### Openmosaic Readme
 
-Openmosaic is an experimental framework that allows you to run processing sketches across multiple browser clients. Openmosaic makes use of the fantastic [p5js](p5js.org) library and nodejs to make this happen.
+Openmosaic is an experimental framework that allows you to run processing sketches across multiple browser clients. Openmosaic makes use of the fantastic [p5js](https://p5js.org/) library and nodejs to make this happen.
 
 ### Example - ugly sine wave across 4 clients
 
